@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Entrenamiento con Bandas</title>
+<style>
+:root{
+  --pine:#13284A;
+  --pine-dark:#0B1A30;
+  --pine-text:#13284A;
+  --bg:#F3F7FC;
+  --card:#FFFFFF;
+  --amber:#2F5FD6;
+  --amber-dark:#2347AC;
+  --green:#3C8C6C;
+  --green-bg:#E7F3EC;
+  --brick:#B0503A;
+  --brick-bg:#F6E7E2;
+  --ink:#16233B;
+  --ink-soft:#5B6B82;
+  --line:#DCE4F0;
+  --radius-s:10px;
+  --radius-m:16px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  height:100%;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0 0 6px 0; font-weight:700; letter-spacing:-0.01em;}
+p{margin:0 0 10px 0; line-height:1.5;}
+button{font-family:inherit;}
+.app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);}
+header.topbar{
+  position:sticky; top:0; z-index:20;
+  background:var(--pine); color:#fff;
+  padding:calc(14px + env(safe-area-inset-top,0px)) 18px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+header.topbar .brand{display:flex;align-items:center;gap:10px;}
+header.topbar .brand svg{flex:none;}
+header.topbar h1{font-size:17px; margin:0; color:#fff;}
+header.topbar .sub{font-size:11px; color:#C7D9F2; margin:0;}
+.iconbtn{
+  background:rgba(255,255,255,.12); border:none; color:#fff; width:38px;height:38px;
+  border-radius:50%; display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+main{flex:1; padding:16px 16px 100px; overflow-x:hidden;}
+.view{display:none;}
+.view.active{display:block; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){.view.active{animation:none;}}
+
+/* Cards */
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-m);
+  padding:16px; margin-bottom:14px;
+}
+.card.tight{padding:12px 14px;}
+.card h3{font-size:15px;}
+.muted{color:var(--ink-soft); font-size:13px;}
+.row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+
+/* Stat tile */
+.stat{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-s);
+  padding:12px; text-align:left;
+}
+.stat .num{font-size:22px; font-weight:800; color:var(--pine-text);}
+.stat .lbl{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; border-radius:12px; padding:14px 18px; font-size:15px; font-weight:700;
+  cursor:pointer; width:100%; text-align:center;
+}
+.btn-primary{background:var(--amber); color:#FFFFFF;}
+.btn-primary:active{background:var(--amber-dark);}
+.btn-outline{background:transparent; border:1.5px solid var(--pine-text); color:var(--pine-text);}
+.btn-ghost{background:var(--pine); color:#fff;}
+.btn-danger{background:var(--brick-bg); color:var(--brick); border:1px solid #e4c3b8;}
+.btn-sm{padding:9px 12px; font-size:13px; width:auto;}
+.btn:disabled{opacity:.45; cursor:not-allowed;}
+.btnrow{display:flex; gap:10px;}
+.btnrow .btn{flex:1;}
+
+/* Progress bar */
+.pbar{height:12px; background:#E4EBF5; border-radius:99px; overflow:hidden; border:1px solid var(--line);}
+.pbar > div{height:100%; background:linear-gradient(90deg,var(--amber),var(--amber-dark)); border-radius:99px; transition:width .4s ease;}
+.pbar.thin{height:8px;}
+
+/* Badges */
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:99px;}
+.badge.green{background:var(--green-bg); color:var(--green);}
+.badge.amber{background:#E3ECFB; color:var(--amber-dark);}
+.badge.pending{background:#EAEFF6; color:var(--ink-soft);}
+.badge.brick{background:var(--brick-bg); color:var(--brick);}
+
+/* checklist */
+.check{
+  display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line);
+  border-radius:var(--radius-s); background:var(--card); margin-bottom:8px; cursor:pointer;
+}
+.check .tick{
+  width:26px;height:26px;border-radius:50%; border:2px solid var(--line); flex:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.check.done{border-color:var(--green);}
+.check.done .tick{background:var(--green); border-color:var(--green);}
+.check .name{font-weight:600; font-size:14.5px;}
+.check .meta{font-size:12px; color:var(--ink-soft);}
+
+/* bottom nav */
+nav.bottomnav{
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  background:#fff; border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  display:flex; justify-content:center;
+}
+nav.bottomnav .wrap{max-width:520px; width:100%; display:flex;}
+nav.bottomnav button{
+  flex:1; background:none; border:none; padding:9px 2px 8px; display:flex; flex-direction:column;
+  align-items:center; gap:3px; color:var(--ink-soft); cursor:pointer; font-size:10.5px; font-weight:600;
+}
+nav.bottomnav button.active{color:var(--pine-text);}
+nav.bottomnav svg{width:22px;height:22px;}
+
+/* modal */
+.overlay{
+  position:fixed; inset:0; background:rgba(15,25,20,.5); z-index:50; display:none;
+  align-items:flex-end; justify-content:center;
+}
+.overlay.open{display:flex;}
+.sheet{
+  background:#fff; width:100%; max-width:520px; max-height:88vh; overflow-y:auto;
+  border-radius:20px 20px 0 0; padding:18px 18px calc(24px + env(safe-area-inset-bottom,0px));
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.sheet .sheethead{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;}
+.closebtn{background:var(--bg); border:none; width:32px;height:32px;border-radius:50%; cursor:pointer; flex:none; display:flex;align-items:center;justify-content:center; color:var(--ink);}
+
+/* forms */
+label{display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:12px 0 5px;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:10px; font-size:15px;
+  background:#fff; color:var(--ink); font-family:inherit;
+}
+textarea{min-height:64px; resize:vertical;}
+.seg{display:flex; gap:6px; flex-wrap:wrap;}
+.seg button{
+  padding:9px 13px; border-radius:10px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft);
+  font-size:13px; font-weight:700; cursor:pointer;
+}
+.seg button.sel{background:var(--pine); border-color:var(--pine); color:#fff;}
+.effortscale{display:flex; gap:4px;}
+.effortscale button{flex:1; padding:9px 0; border-radius:8px; border:1.5px solid var(--line); background:#fff; font-weight:700; cursor:pointer; font-size:13px;}
+.effortscale button.sel{background:var(--amber); border-color:var(--amber-dark); color:#FFFFFF;}
+
+/* section title */
+.sectiontitle{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:22px 0 10px;}
+.sectiontitle:first-child{margin-top:0;}
+
+/* week tabs */
+.weektabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px;}
+.weektabs button{
+  flex:none; padding:9px 14px; border-radius:12px; border:1.5px solid var(--line); background:#fff;
+  font-weight:700; font-size:13px; color:var(--ink-soft); cursor:pointer;
+}
+.weektabs button.sel{background:var(--pine); border-color:var(--pine); color:#fff;}
+
+/* calendar grid */
+.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px;}
+.calday{
+  border:1.5px solid var(--line); border-radius:10px; padding:8px 4px; text-align:center; background:#fff; cursor:pointer;
+}
+.calday .d{font-size:10px; color:var(--ink-soft); font-weight:700;}
+.calday .icon{margin:6px auto 2px;}
+.calday.today{border-color:var(--amber); border-width:2px;}
+.calday.done{background:var(--green-bg); border-color:var(--green);}
+
+/* exercise list item */
+.exitem{display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:8px; cursor:pointer;}
+.exitem .thumb{width:44px;height:44px;flex:none; background:var(--bg); border-radius:10px; display:flex;align-items:center;justify-content:center;}
+.exitem .t{flex:1; min-width:0;}
+.exitem .t .n{font-weight:700; font-size:14px;}
+.exitem .t .m{font-size:11.5px; color:var(--ink-soft);}
+
+/* illustration */
+.illu-row{display:flex; align-items:center; justify-content:center; gap:6px; margin:10px 0 6px; overflow-x:auto; padding-bottom:4px;}
+.illu-frame{flex:none; text-align:center; width:150px;}
+.illu-frame.wide{width:260px;}
+.illu-frame svg{width:100%; height:auto; background:#EDF2FA; border-radius:12px; border:1px solid #D7E0EE; display:block;}
+.illu-frame .cap{font-size:10px; font-weight:800; color:var(--ink-soft); margin-top:5px; letter-spacing:.04em;}
+.illu-arrow{flex:none; color:#AAB9CE; margin:0 -2px;}
+.illu-legend{display:flex; gap:14px; flex-wrap:wrap; margin:4px 0 8px; font-size:11px; color:var(--ink-soft);}
+.illu-legend span{display:inline-flex; align-items:center; gap:5px;}
+.illu-legend i{width:12px; height:4px; border-radius:2px; display:inline-block;}
+.illu-legend i.ring{width:10px; height:10px; border-radius:50%; background:#C98A2C; border:2px solid #fff; box-shadow:0 0 0 1px #C98A2C;}
+
+/* timer */
+.timerbox{text-align:center; padding:10px 0;}
+.timerbox .tnum{font-size:48px; font-weight:800; color:var(--pine-text); font-variant-numeric:tabular-nums;}
+.timerbox .tlabel{font-size:13px; color:var(--ink-soft); margin-bottom:14px;}
+
+/* guided session (voice/timer-driven mode) */
+.guided-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.guided-total{font-size:13px; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+.guided-progress{font-size:12px; color:var(--ink-soft); font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+.guided-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius-m); padding:24px 18px; text-align:center; margin-bottom:14px;}
+.guided-exname{font-size:20px; font-weight:800; margin-bottom:4px;}
+.guided-setnum{font-size:13.5px; color:var(--ink-soft); margin-bottom:18px;}
+.guided-phase{display:inline-block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:5px 12px; border-radius:99px; margin-bottom:14px;}
+.guided-phase.work{background:var(--green-bg); color:var(--green);}
+.guided-phase.rest{background:#E3ECFB; color:var(--amber-dark);}
+.guided-bignum{font-size:64px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1;}
+.guided-sub{font-size:13px; color:var(--ink-soft); margin-top:10px;}
+.guided-controls{display:flex; gap:8px; margin-bottom:10px;}
+.guided-controls .btn{flex:1;}
+.guided-exitrow{text-align:center; margin-top:6px;}
+
+/* safety / glucose */
+.infolist li{margin-bottom:8px; line-height:1.5;}
+.infolist{padding-left:20px; margin:0 0 10px;}
+.warnbox{background:var(--brick-bg); border:1px solid #e4c3b8; border-radius:12px; padding:13px; margin:10px 0;}
+.warnbox b{color:var(--brick);}
+.notebox{background:var(--green-bg); border:1px solid #cfe3d6; border-radius:12px; padding:13px; margin:10px 0; font-size:13.5px;}
+
+/* motivational */
+.motiv{background:var(--pine); color:#fff; border-radius:16px; padding:16px; margin-bottom:14px;}
+.motiv p{margin:0; font-size:14px; color:#E2EBFC;}
+
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; padding:11px 18px; border-radius:99px; font-size:13.5px;
+  opacity:0; transition:all .25s ease; z-index:60; pointer-events:none; white-space:nowrap;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{display:none;}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1B30; --card:#162844; --ink:#EAF0FA; --ink-soft:#93A3BE; --line:#28395A;
+    --green-bg:#1C3A30; --brick-bg:#3A251F; --pine:#1C3A5E; --pine-text:#6FA3F7;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1B30; --card:#162844; --ink:#EAF0FA; --ink-soft:#93A3BE; --line:#28395A;
+  --green-bg:#1C3A30; --brick-bg:#3A251F; --pine:#1C3A5E; --pine-text:#6FA3F7;
+}
+
+/* print */
+@media print{
+  nav.bottomnav, header.topbar, .noprint, .overlay{display:none !important;}
+  body{background:#fff;}
+  .view{display:block !important;}
+  .card{break-inside:avoid; border:1px solid #ccc;}
+  main{padding:0;}
+  .app{max-width:100%;}
+}
+a{color:var(--pine-text);}
+
+/* pantalla de inicio de sesión */
+.auth-gate{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:24px; z-index:200;}
+.auth-card{max-width:340px; width:100%; text-align:center;}
+.auth-card label{text-align:left;}
+.auth-error{background:var(--brick-bg); color:var(--brick); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:12px; text-align:left;}
+.auth-forgot{font-size:12.5px; color:var(--pine-text); margin-top:16px; text-decoration:underline; cursor:pointer;}
+.auth-loading{position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;}
+</style>
+</head>
+<body>
+
+<!-- Pantalla de inicio de sesión: se oculta en cuanto hay una sesión válida y los datos cargaron -->
+<div id="authGate" class="auth-gate">
+  <div class="auth-card" id="authCard">
+    <svg width="40" height="40" viewBox="0 0 30 30" style="margin:0 auto 10px;display:block;"><circle cx="15" cy="15" r="14" fill="#13284A"/><path d="M6 15 Q10 8 15 15 Q20 22 24 15" stroke="#6FA3F7" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>
+    <h1 style="font-size:19px;margin:0 0 2px;">Mi Entrenamiento con Bandas</h1>
+    <p class="muted" id="authSubtitle" style="margin-bottom:16px;">Inicia sesión para ver tu progreso</p>
+
+    <div id="authError" class="auth-error" style="display:none;"></div>
+
+    <label for="authEmail">Correo electrónico</label>
+    <input type="email" id="authEmail" placeholder="tu@correo.com" autocomplete="username">
+    <label for="authPassword">Contraseña</label>
+    <input type="password" id="authPassword" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+
+    <button class="btn btn-primary" id="authSubmitBtn" style="margin-top:16px;" onclick="handleAuthSubmit()">INICIAR SESIÓN</button>
+    <button class="btn btn-outline" id="authToggleBtn" style="margin-top:10px;" onclick="toggleAuthMode()">¿No tienes cuenta? Crear una</button>
+    <p class="auth-forgot" onclick="handleForgotPassword()">¿Olvidaste tu contraseña?</p>
+  </div>
+  <div id="authLoading" class="auth-loading" style="display:none;">
+    <p class="muted">Cargando tu progreso…</p>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+
+  <header class="topbar noprint">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="14" fill="#ffffff22"/><path d="M6 15 Q10 8 15 15 Q20 22 24 15" stroke="#6FA3F7" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>
+      <div><h1>Mi Entrenamiento con Bandas</h1><p class="sub" id="topbarSub">Semana 1</p></div>
+    </div>
+    <button class="iconbtn" onclick="go('settings')" aria-label="Configuración">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <main id="main">
+
+    <!-- HOME -->
+    <section class="view" id="view-home">
+      <div class="motiv" id="motivBox"></div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:10px;">
+          <div><h3 style="margin:0;">Semana <span id="homeWeek">1</span> de 8</h3><p class="muted" style="margin:0;">Día de hoy: <span id="homeDayName">—</span></p></div>
+          <span class="badge amber" id="homePct">0%</span>
+        </div>
+        <div class="pbar"><div id="homeProgBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="card" id="todayCard"></div>
+
+      <button class="btn btn-primary" style="margin-bottom:16px;" onclick="startTodayWorkout()">COMENZAR ENTRENAMIENTO</button>
+
+      <div class="grid2" style="margin-bottom:16px;">
+        <div class="stat"><div class="num" id="statCompleted">0</div><div class="lbl">Entrenamientos completados</div></div>
+        <div class="stat"><div class="num" id="statMinutes">0</div><div class="lbl">Minutos de actividad</div></div>
+        <div class="stat"><div class="num" id="statWalks">0</div><div class="lbl">Caminatas realizadas</div></div>
+        <div class="stat"><div class="num" id="statStreak">0</div><div class="lbl">Días consecutivos</div></div>
+      </div>
+
+      <div class="card tight" id="lastSessionCard"></div>
+
+      <p class="sectiontitle">Accesos rápidos</p>
+      <div class="grid3">
+        <button class="btn btn-outline btn-sm" onclick="go('week')">Entrenamiento</button>
+        <button class="btn btn-outline btn-sm" onclick="go('library')">Ejercicios</button>
+        <button class="btn btn-outline btn-sm" onclick="go('calendar')">Calendario</button>
+        <button class="btn btn-outline btn-sm" onclick="go('progress')">Progreso</button>
+        <button class="btn btn-outline btn-sm" onclick="go('safety')">Seguridad</button>
+        <button class="btn btn-outline btn-sm" onclick="go('settings')">Configuración</button>
+      </div>
+    </section>
+
+    <!-- WEEK / PROGRAM -->
+    <section class="view" id="view-week">
+      <h2>Programa de 8 semanas</h2>
+      <p class="muted">Semanas 1–4: Fase 1 (fundamentos). Semanas 5–8: Fase 2, con más variedad de ejercicios e intensidad progresiva. La técnica siempre es más importante que la resistencia o las repeticiones.</p>
+      <div class="weektabs" id="weekTabs"></div>
+      <div id="weekContent"></div>
+    </section>
+
+    <!-- WORKOUT SESSION -->
+    <section class="view" id="view-workout">
+      <button class="btn btn-outline btn-sm noprint" style="width:auto;margin-bottom:12px;" onclick="leaveWorkoutView()">← Volver al inicio</button>
+      <div id="workoutContent"></div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="view" id="view-library">
+      <h2>Biblioteca de ejercicios</h2>
+      <p class="muted">Toca un ejercicio para ver la ficha completa y la guía visual.</p>
+      <div id="libraryList"></div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="view" id="view-calendar">
+      <h2>Calendario semanal</h2>
+      <p class="muted">Lunes a viernes: fuerza y actividad ligera. Domingo: descanso.</p>
+      <div id="calendarContent"></div>
+    </section>
+
+    <!-- WALKS -->
+    <section class="view" id="view-walks">
+      <h2>Caminatas</h2>
+      <div class="notebox">Caminar 10–20 minutos después de las comidas puede ser una estrategia útil para aumentar tu actividad física y puede ayudar a controlar la elevación de glucosa después de comer.</div>
+      <button class="btn btn-primary" style="margin-bottom:14px;" onclick="openWalkForm()">REGISTRAR CAMINATA</button>
+      <p class="sectiontitle">Progresión sugerida</p>
+      <div class="card tight" id="walkProgressionCard"></div>
+      <p class="sectiontitle">Historial</p>
+      <div id="walkHistory"></div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="view" id="view-progress">
+      <h2>Tu progreso</h2>
+      <div class="grid2" style="margin-bottom:14px;">
+        <div class="stat"><div class="num" id="pgCompleted">0</div><div class="lbl">Entrenamientos completados</div></div>
+        <div class="stat"><div class="num" id="pgPct">0%</div><div class="lbl">Programa completado</div></div>
+        <div class="stat"><div class="num" id="pgStreak">0</div><div class="lbl">Días consecutivos</div></div>
+        <div class="stat"><div class="num" id="pgWalkMin">0</div><div class="lbl">Minutos caminados</div></div>
+        <div class="stat"><div class="num" id="pgReps">0</div><div class="lbl">Total de repeticiones (aprox.)</div></div>
+        <div class="stat"><div class="num" id="pgBands">—</div><div class="lbl">Bandas más usadas</div></div>
+      </div>
+      <p class="sectiontitle">Progreso por semana</p>
+      <div class="card tight" id="progressChart"></div>
+      <p class="sectiontitle">Evolución de resistencia</p>
+      <div class="card tight" id="bandEvolution"></div>
+      <button class="btn btn-outline" style="margin-top:14px;" onclick="openIncreaseQuiz()">¿DEBO AUMENTAR LA RESISTENCIA?</button>
+    </section>
+
+    <!-- SAFETY -->
+    <section class="view" id="view-safety">
+      <h2>Seguridad</h2>
+      <div class="card">
+        <h3>Antes de entrenar</h3>
+        <ul class="infolist">
+          <li>No comiences con una resistencia excesiva.</li>
+          <li>Nunca sacrifiques la técnica por hacer más repeticiones.</li>
+          <li>No utilices bandas dañadas, agrietadas o desgastadas.</li>
+          <li>Revisa la banda antes de cada uso.</li>
+          <li>Asegura correctamente cualquier punto de anclaje (puerta, poste, pie).</li>
+          <li>Mantén una postura adecuada durante todo el movimiento.</li>
+          <li>Detente de inmediato ante dolor agudo o punzante.</li>
+        </ul>
+      </div>
+      <div class="warnbox">
+        <b>Detén el ejercicio y busca atención médica si sientes:</b>
+        <ul class="infolist" style="margin-top:8px;">
+          <li>Mareo importante</li>
+          <li>Confusión</li>
+          <li>Debilidad inusual</li>
+          <li>Dolor en el pecho</li>
+          <li>Dificultad respiratoria fuera de lo esperado</li>
+          <li>Sensación de desmayo</li>
+        </ul>
+      </div>
+      <div class="notebox">
+        Si utilizas medicamentos que pueden producir hipoglucemia (bajada de glucosa), consulta con tu profesional de salud sobre cómo manejar tu glucosa alrededor del ejercicio. Esta aplicación no puede indicarte cómo modificar tus medicamentos.
+      </div>
+      <button class="btn btn-outline" onclick="go('glucose')">Ver: Actividad física y glucosa</button>
+    </section>
+
+    <!-- GLUCOSE -->
+    <section class="view" id="view-glucose">
+      <h2>Actividad física y glucosa</h2>
+      <div class="card">
+        <p>Cuando mueves tus músculos, ellos utilizan más glucosa como energía, y la actividad física regular puede mejorar la sensibilidad a la insulina con el tiempo.</p>
+        <p>Por eso, mantenerte activo de forma constante —con entrenamiento de fuerza y caminatas— puede contribuir al control de tu glucosa.</p>
+      </div>
+      <div class="warnbox">
+        <b>Pero es importante recordar:</b>
+        <ul class="infolist" style="margin-top:8px;">
+          <li>La actividad física <b>no sustituye</b> tus medicamentos.</li>
+          <li><b>No sustituye</b> el seguimiento médico.</li>
+          <li><b>No sustituye</b> una alimentación adecuada.</li>
+        </ul>
+      </div>
+      <p class="muted">Esta información es educativa y general. Consulta siempre a tu profesional de salud sobre tu caso particular.</p>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <h2>Perfil y configuración</h2>
+      <div class="card">
+        <label for="cfgName">Nombre</label>
+        <input type="text" id="cfgName" placeholder="Tu nombre">
+        <label>Semana actual</label>
+        <div class="seg" id="cfgWeekSeg">
+          <button data-w="1">Semana 1</button><button data-w="2">Semana 2</button>
+          <button data-w="3">Semana 3</button><button data-w="4">Semana 4</button>
+          <button data-w="5">Semana 5</button><button data-w="6">Semana 6</button>
+          <button data-w="7">Semana 7</button><button data-w="8">Semana 8</button>
+        </div>
+        <label>Unidades preferidas</label>
+        <div class="seg" id="cfgUnitSeg"><button data-u="km">Kilómetros</button><button data-u="mi">Millas</button></div>
+        <label for="cfgRest">Duración de descanso predeterminada (segundos)</label>
+        <input type="number" id="cfgRest" min="15" max="240" step="5">
+        <label for="cfgGoal">Objetivo principal</label>
+        <select id="cfgGoal">
+          <option value="habito">Crear el hábito de entrenar</option>
+          <option value="fuerza">Aumentar fuerza</option>
+          <option value="tono">Tonificar todo el cuerpo</option>
+          <option value="glucosa">Apoyar el control de glucosa</option>
+          <option value="movilidad">Mejorar movilidad y estabilidad</option>
+        </select>
+        <label class="row" style="margin-top:14px;"><span style="font-weight:700;font-size:13.5px;color:var(--ink);">Recordatorios visuales en Inicio</span>
+          <input type="checkbox" id="cfgReminders" style="width:20px;height:20px;">
+        </label>
+        <label class="row"><span style="font-weight:700;font-size:13.5px;color:var(--ink);">Tema oscuro</span>
+          <input type="checkbox" id="cfgDark" style="width:20px;height:20px;">
+        </label>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="saveSettings()">GUARDAR CONFIGURACIÓN</button>
+      </div>
+
+      <p class="sectiontitle">Mi cuenta</p>
+      <div class="card tight">
+        <p class="muted" style="margin:0;">Sesión iniciada como <b style="color:var(--ink);" id="cfgAccountEmail">—</b></p>
+        <p class="muted" style="font-size:11.5px;">Tu progreso se guarda en la nube: si cambias de teléfono, solo inicia sesión de nuevo con este mismo correo.</p>
+        <button class="btn btn-outline btn-sm" onclick="doLogout()">CERRAR SESIÓN</button>
+      </div>
+
+      <p class="sectiontitle">Tus datos</p>
+      <div class="card tight">
+        <div class="btnrow" style="margin-bottom:10px;">
+          <button class="btn btn-outline btn-sm" onclick="exportData()">EXPORTAR MI PROGRESO</button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">IMPORTAR MI PROGRESO</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">IMPRIMIR PROGRAMA</button>
+        <button class="btn btn-danger btn-sm" style="margin-top:10px;" onclick="confirmReset()">Borrar todos los datos</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottomnav noprint">
+    <div class="wrap" id="bottomnav"></div>
+  </nav>
+</div>
+
+<!-- Generic modal -->
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheetContent"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase (SDK de compatibilidad: funciona con una etiqueta de script normal, sin necesidad de herramientas de compilación) -->
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-database-compat.js"></script>
+<script>
+// Configuración de tu proyecto de Firebase (no es secreta; la seguridad real la dan las Reglas de la base de datos)
+const firebaseConfig = {
+  apiKey: "AIzaSyCEpS9NDxVerSTYGbw3NDRfLUoYAv5MbYM",
+  authDomain: "mi-entrenamiento-bandas.firebaseapp.com",
+  databaseURL: "https://mi-entrenamiento-bandas-default-rtdb.firebaseio.com",
+  projectId: "mi-entrenamiento-bandas",
+  storageBucket: "mi-entrenamiento-bandas.firebasestorage.app",
+  messagingSenderId: "185558767744",
+  appId: "1:185558767744:web:f736a494eab28aca0f6e65"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const BANDS = ["Muy ligera","Ligera","Media","Fuerte","Extra fuerte"];
+
+const TOTAL_WEEKS = 8;
+// setsNum: número entero de series a usar en el modo guiado (cuando "sets" es un rango como "2–3", se usa el valor alto).
+// setSeconds: duración sugerida de una serie "por tiempo", pensada para subir poco a poco con la progresión.
+// restSeconds: duración del descanso entre series en el modo guiado (coincide con el texto de "rest").
+const WEEKS = {
+  1:{name:"Adaptación", phase:1, sets:2, setsNum:2, setSeconds:30, rest:"60–90 seg", restSeconds:75, reps:"8–12", desc:"Aprende el movimiento y acostumbra tu cuerpo. Intensidad moderada. No entrenes al fallo.", band:"Ligera"},
+  2:{name:"Base", phase:1, sets:"2–3", setsNum:3, setSeconds:35, rest:"60–75 seg", restSeconds:67, reps:"10–15", desc:"Mantén la técnica correcta. Aumenta ligeramente el volumen si te sientes cómodo.", band:"Ligera o media"},
+  3:{name:"Progresión", phase:1, sets:3, setsNum:3, setSeconds:40, rest:"60 seg", restSeconds:60, reps:"10–15", desc:"Aumenta la resistencia solo si corresponde. Mayor control del movimiento.", band:"Media"},
+  4:{name:"Consolidación", phase:1, sets:3, setsNum:3, setSeconds:40, rest:"45–60 seg", restSeconds:52, reps:"10–15", desc:"Consolida tu fuerza. Evalúa tu preparación para las semanas 5–8.", band:"Media o fuerte"},
+  5:{name:"Fortalecimiento", phase:2, sets:3, setsNum:3, setSeconds:45, rest:"45–60 seg", restSeconds:52, reps:"12–15", desc:"Nueva fase: más variedad de ejercicios para seguir progresando. Aumenta el volumen solo si la técnica es sólida.", band:"Media o fuerte"},
+  6:{name:"Variación", phase:2, sets:"3–4", setsNum:4, setSeconds:45, rest:"45 seg", restSeconds:45, reps:"12–15", desc:"Introduce ejercicios nuevos del catálogo ampliado. Prioriza siempre la técnica sobre la cantidad.", band:"Fuerte"},
+  7:{name:"Intensificación", phase:2, sets:4, setsNum:4, setSeconds:50, rest:"30–45 seg", restSeconds:37, reps:"10–15", desc:"Mayor densidad de entrenamiento (menos descanso). Aumenta la resistencia solo si el control se mantiene.", band:"Fuerte"},
+  8:{name:"Dominio", phase:2, sets:4, setsNum:4, setSeconds:50, rest:"30–45 seg", restSeconds:37, reps:"12–15", desc:"Consolida esta fase. Evalúa tu progreso general y decide si repites el ciclo con más resistencia o mantienes esta rutina.", band:"Fuerte o extra fuerte"}
+};
+
+// pose helper defaults reused by illustrations
+const EXO = {
+  sentadilla:{name:"Sentadilla con banda", group:"piernas", muscles:"Cuádriceps, glúteos, isquiotibiales", equip:"Banda de resistencia bajo los pies o alrededor de los muslos",
+    start:"De pie, pies al ancho de los hombros, banda bajo los pies sosteniendo los extremos a la altura de los hombros (o banda alrededor de los muslos).",
+    steps:["Mantén el pecho erguido y la mirada al frente.","Flexiona las rodillas y las caderas como si te sentaras en una silla.","Baja hasta donde la técnica te lo permita, sin que las rodillas se junten.","Empuja a través de los talones para volver a la posición inicial."],
+    breathing:"Inhala al bajar, exhala al subir.", errors:"Rodillas que se van hacia adentro; talones que se levantan; espalda redondeada.",
+    correct:"Sientes el trabajo en piernas y glúteos, rodillas alineadas con los pies, espalda neutra.",
+    increase:"Cuando completes todas las repeticiones con técnica correcta y te sobren varias repeticiones.",
+    easier:"Reduce la profundidad del descanso o usa una banda más ligera; apóyate en una silla si es necesario.",
+    harder:"Aumenta la profundidad, la resistencia, o añade una pausa de 2 segundos abajo.", pose:"squat", template:"standing"},
+  peso_muerto:{name:"Peso muerto con banda", group:"piernas", muscles:"Isquiotibiales, glúteos, espalda baja", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, pies al ancho de cadera, sosteniendo los extremos frente a los muslos.",
+    steps:["Con rodillas ligeramente flexionadas, empuja las caderas hacia atrás.","Baja el torso manteniendo la espalda recta, sin redondear.","Siente el estiramiento en isquiotibiales.","Empuja las caderas hacia adelante para volver a pararte erguido."],
+    breathing:"Inhala al bajar, exhala al subir.", errors:"Redondear la espalda baja; flexionar demasiado las rodillas (convertirlo en sentadilla).",
+    correct:"Sientes el trabajo en la parte posterior de las piernas y glúteos, no en la espalda baja.",
+    increase:"Cuando la técnica sea sólida y el movimiento se sienta cómodo con esfuerzo moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o el rango de movimiento con buena técnica.", pose:"hinge", template:"standing"},
+  puente_gluteos:{name:"Puente de glúteos con banda", group:"piernas", muscles:"Glúteos, isquiotibiales, core", equip:"Banda alrededor de los muslos, por encima de las rodillas",
+    start:"Acostado boca arriba, rodillas flexionadas, pies apoyados en el piso, banda alrededor de los muslos.",
+    steps:["Aprieta el abdomen suavemente.","Empuja a través de los talones y eleva las caderas hacia el techo.","Aprieta los glúteos en la parte alta, evitando abrir demasiado las rodillas.","Baja controladamente sin dejar caer las caderas de golpe."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Arquear demasiado la espalda baja; dejar caer las caderas rápido.",
+    correct:"Sientes el trabajo en glúteos, no en la espalda baja.",
+    increase:"Cuando el movimiento se sienta fácil y controlado con la resistencia actual.",
+    easier:"Reduce el rango de movimiento o realiza el ejercicio sin banda primero.", harder:"Añade una pausa arriba de 2–3 segundos.", pose:"bridge", template:"lying"},
+  caminata_lateral:{name:"Caminata lateral con banda", group:"piernas", muscles:"Glúteo medio, cadera, estabilidad", equip:"Banda alrededor de tobillos o por encima de las rodillas",
+    start:"De pie, banda alrededor de los tobillos o rodillas, rodillas ligeramente flexionadas, postura de media sentadilla.",
+    steps:["Mantén la tensión de la banda en todo momento.","Da un paso lateral controlado hacia un lado.","Sigue con el otro pie sin perder la tensión de la banda.","Repite varios pasos hacia un lado y luego hacia el otro."],
+    breathing:"Respira de forma natural y controlada.", errors:"Perder la tensión de la banda; erguirse por completo entre pasos.",
+    correct:"Sientes el trabajo en la parte externa de la cadera.",
+    increase:"Cuando puedas mantener la tensión y la postura durante todos los pasos con facilidad.",
+    easier:"Da pasos más pequeños o usa una banda más ligera.", harder:"Aumenta la profundidad de la sentadilla o el tamaño del paso.", pose:"lateral", template:"standing"},
+  remo:{name:"Remo con banda", group:"espalda", muscles:"Espalda, bíceps, hombros posteriores", equip:"Banda anclada frente a ti a la altura del pecho",
+    start:"Sentado o de pie, banda anclada frente a ti, brazos extendidos sosteniendo los extremos.",
+    steps:["Mantén el pecho erguido y los hombros hacia abajo.","Tira de la banda llevando los codos hacia atrás, cerca del cuerpo.","Junta los omóplatos en la parte final del movimiento.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al tirar, inhala al volver.", errors:"Encoger los hombros hacia las orejas; usar impulso del torso.",
+    correct:"Sientes el trabajo entre los omóplatos y en la espalda media.",
+    increase:"Cuando completes las repeticiones con control y te sobren varias.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o añade una pausa al final.", pose:"row", template:"standing"},
+  jalon:{name:"Jalón con banda", group:"espalda", muscles:"Espalda ancha (dorsales), bíceps", equip:"Banda anclada en un punto alto (puerta o poste)",
+    start:"De pie o de rodillas, banda anclada arriba, brazos extendidos hacia arriba sosteniendo los extremos.",
+    steps:["Mantén el core firme y el pecho ligeramente elevado.","Tira de la banda llevando los codos hacia abajo y hacia los lados del cuerpo.","Evita arquear la espalda en exceso.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al tirar hacia abajo, inhala al volver.", errors:"Usar impulso del torso; arquear la espalda.",
+    correct:"Sientes el trabajo en la espalda ancha, no en la zona lumbar.",
+    increase:"Cuando la técnica sea sólida y el esfuerzo sea moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o el rango de movimiento.", pose:"pulldown", template:"standing"},
+  curl_biceps:{name:"Curl de bíceps con banda", group:"brazos", muscles:"Bíceps", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, brazos extendidos hacia abajo, codos cerca del cuerpo.",
+    steps:["Mantén los codos fijos junto al torso.","Flexiona los codos llevando las manos hacia los hombros.","Aprieta el bíceps en la parte alta.","Baja controladamente sin soltar la tensión."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Mover los codos hacia adelante; usar impulso del cuerpo.",
+    correct:"Sientes el trabajo únicamente en el bíceps, con los codos quietos.",
+    increase:"Cuando el movimiento sea fácil con la banda actual y te sobren repeticiones.",
+    easier:"Reduce la resistencia o el rango de movimiento.", harder:"Aumenta la resistencia o añade una pausa arriba.", pose:"curl", template:"standing"},
+  extension_triceps:{name:"Extensión de tríceps con banda", group:"brazos", muscles:"Tríceps", equip:"Banda anclada arriba o sostenida sobre el hombro",
+    start:"De pie, banda anclada por encima de la cabeza o sujeta con una mano detrás de la nuca, codo flexionado.",
+    steps:["Mantén el codo apuntando hacia arriba y fijo.","Extiende el antebrazo llevando la mano hacia arriba o adelante.","Aprieta el tríceps al final del movimiento.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al extender, inhala al flexionar.", errors:"Mover el codo durante el ejercicio; arquear la espalda.",
+    correct:"Sientes el trabajo en la parte posterior del brazo, con el codo estable.",
+    increase:"Cuando el movimiento se sienta controlado y fácil.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia.", pose:"tricep", template:"standing"},
+  press_pecho:{name:"Press de pecho con banda", group:"hombros", muscles:"Pecho, hombros, tríceps", equip:"Banda anclada detrás de ti, a la altura del pecho",
+    start:"De pie, banda anclada detrás, manos a la altura del pecho, codos flexionados.",
+    steps:["Mantén el core firme y una postura estable.","Empuja las manos hacia adelante extendiendo los codos.","Evita bloquear los codos con fuerza excesiva.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al empujar, inhala al volver.", errors:"Arquear la espalda baja; encoger los hombros.",
+    correct:"Sientes el trabajo en el pecho y la parte frontal de los hombros.",
+    increase:"Cuando completes las repeticiones con esfuerzo moderado y te sobren varias.",
+    easier:"Reduce el rango o la resistencia.", harder:"Aumenta la resistencia o añade una pausa al frente.", pose:"press", template:"standing"},
+  press_hombros:{name:"Press de hombros con banda", group:"hombros", muscles:"Hombros, tríceps", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, manos a la altura de los hombros, palmas hacia adelante.",
+    steps:["Mantén el core firme, sin arquear la espalda baja.","Empuja las manos hacia arriba hasta casi extender los codos.","Evita bloquear los codos con fuerza.","Baja controladamente a la posición inicial."],
+    breathing:"Exhala al empujar hacia arriba, inhala al bajar.", errors:"Arquear la espalda; usar impulso de las piernas.",
+    correct:"Sientes el trabajo en los hombros, con el core estable.",
+    increase:"Cuando el movimiento sea controlado y con esfuerzo moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia.", pose:"overhead", template:"standing"},
+  elevaciones_laterales:{name:"Elevaciones laterales con banda", group:"hombros", muscles:"Hombros (deltoides lateral)", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, brazos a los lados del cuerpo, ligera flexión de codos.",
+    steps:["Mantén los hombros relajados, lejos de las orejas.","Eleva los brazos hacia los lados hasta la altura del hombro.","Evita encoger los hombros durante el movimiento.","Baja controladamente a la posición inicial."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Subir los brazos más arriba del hombro; encoger los hombros.",
+    correct:"Sientes el trabajo en la parte lateral del hombro.",
+    increase:"Cuando el movimiento sea fácil y controlado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o añade una pausa.", pose:"lateral_raise", template:"standing"},
+  pallof_press:{name:"Pallof press", group:"core", muscles:"Core, oblicuos (anti-rotación)", equip:"Banda anclada a un lado, a la altura del pecho",
+    start:"De pie, de costado respecto al anclaje, banda sostenida con ambas manos frente al pecho.",
+    steps:["Aprieta el abdomen para evitar que el torso gire.","Extiende los brazos hacia adelante sin dejar que el cuerpo rote.","Mantén 1–2 segundos con los brazos extendidos.","Regresa las manos al pecho con control."],
+    breathing:"Exhala al extender, inhala al volver.", errors:"Dejar que el torso gire hacia la banda; arquear la espalda.",
+    correct:"Sientes el trabajo en el abdomen, con el torso completamente estable.",
+    increase:"Cuando puedas mantener la posición sin rotar con la resistencia actual.",
+    easier:"Reduce la resistencia o el tiempo de sostén.", harder:"Aumenta el tiempo de sostén o la resistencia.", pose:"pallof", template:"standing"},
+  bird_dog:{name:"Bird-dog", group:"core", muscles:"Core, espalda baja, estabilidad, glúteos", equip:"Ninguno (opcional: colchoneta)",
+    start:"En posición de cuadrupedia, manos bajo los hombros, rodillas bajo las caderas, espalda neutra.",
+    steps:["Aprieta el abdomen suavemente.","Extiende un brazo hacia adelante y la pierna opuesta hacia atrás al mismo tiempo.","Mantén las caderas y hombros nivelados, sin rotar.","Regresa con control y repite con el lado contrario."],
+    breathing:"Exhala al extender, inhala al regresar.", errors:"Rotar las caderas; arquear la espalda baja; movimientos bruscos.",
+    correct:"Sientes estabilidad en el core, con caderas y hombros nivelados.",
+    increase:"Cuando puedas mantener el equilibrio y la técnica con facilidad; añade más tiempo de sostén.",
+    easier:"Extiende solo el brazo o solo la pierna, no ambos a la vez.", harder:"Añade una pausa de 2–3 segundos en la extensión.", pose:"birddog", template:"quadruped"},
+  plancha_principiantes:{name:"Plancha para principiantes", group:"core", muscles:"Core, hombros, espalda", equip:"Ninguno (opcional: colchoneta)",
+    start:"Apoyado sobre antebrazos y rodillas (versión principiante) o antebrazos y pies, cuerpo en línea recta.",
+    steps:["Aprieta el abdomen y los glúteos.","Mantén una línea recta desde la cabeza hasta las rodillas (o pies).","Evita que las caderas suban o bajen.","Respira de forma constante mientras sostienes la posición."],
+    breathing:"Respiración constante y controlada, sin contener el aire.", errors:"Dejar caer las caderas; elevar demasiado los glúteos.",
+    correct:"Sientes el trabajo en el abdomen, con la espalda baja cómoda.",
+    increase:"Cuando puedas sostener la posición completa el tiempo indicado con buena técnica.",
+    easier:"Apóyate sobre las rodillas en lugar de los pies, o reduce el tiempo.", harder:"Pasa a apoyo sobre los pies o aumenta el tiempo de sostén.", pose:"plank", template:"plank"},
+  marcha_sitio:{name:"Marcha en el sitio", group:"movilidad", muscles:"Calentamiento general, cadera, piernas", equip:"Ninguno",
+    start:"De pie, postura erguida y relajada.",
+    steps:["Levanta una rodilla hacia el pecho.","Baja el pie y repite con la otra pierna.","Mueve los brazos de forma natural al ritmo de las piernas.","Mantén un ritmo cómodo durante el tiempo indicado."],
+    breathing:"Respiración natural.", errors:"Ritmo demasiado rápido al inicio.", correct:"Te sientes activo y con el ritmo cardíaco ligeramente elevado.",
+    increase:"No aplica: es un ejercicio de calentamiento.", easier:"Reduce el ritmo.", harder:"Aumenta ligeramente el ritmo o la altura de la rodilla.", pose:"march", template:"standing"},
+  movilidad_hombros:{name:"Movilidad de hombros", group:"movilidad", muscles:"Hombros (movilidad articular)", equip:"Ninguno",
+    start:"De pie, brazos relajados a los lados.",
+    steps:["Eleva los hombros hacia las orejas.","Rota los hombros hacia atrás en un círculo amplio.","Repite varias veces y luego invierte la dirección.","Mantén el movimiento suave y controlado."],
+    breathing:"Respiración natural y relajada.", errors:"Movimientos demasiado bruscos.", correct:"Sientes mayor soltura en los hombros, sin dolor.",
+    increase:"No aplica: es un ejercicio de movilidad.", easier:"Reduce la amplitud del círculo.", harder:"Aumenta ligeramente la amplitud.", pose:"shouldercircle", template:"standing"},
+
+  /* ---- ejercicios adicionales para dar variedad a la biblioteca ---- */
+  zancada:{name:"Zancada con banda", group:"piernas", muscles:"Cuádriceps, glúteos, isquiotibiales, equilibrio", equip:"Banda bajo el pie de atrás, sostenida a la altura del hombro",
+    start:"De pie, un pie adelantado y otro atrás, banda bajo el pie trasero, sosteniendo los extremos a la altura del hombro.",
+    steps:["Mantén el torso erguido y el core firme.","Baja flexionando ambas rodillas hasta que la rodilla trasera casi toque el suelo.","La rodilla delantera no debe sobrepasar la punta del pie.","Empuja con el talón delantero para volver arriba."],
+    breathing:"Inhala al bajar, exhala al subir.", errors:"Rodilla delantera que se va hacia adentro; perder el equilibrio.",
+    correct:"Sientes el trabajo en el muslo y glúteo de la pierna delantera, con buen equilibrio.",
+    increase:"Cuando completes las repeticiones de ambos lados con control y técnica correcta.",
+    easier:"Da un paso más corto o apóyate en una pared.", harder:"Aumenta la profundidad o la resistencia.", pose:"lunge", template:"standing"},
+  patada_gluteo:{name:"Patada de glúteo con banda", group:"piernas", muscles:"Glúteos, isquiotibiales", equip:"Banda alrededor de los tobillos",
+    start:"En cuadrupedia, manos bajo los hombros, rodillas bajo las caderas, banda alrededor de los tobillos.",
+    steps:["Mantén el abdomen firme y la espalda neutra.","Empuja un talón hacia atrás y arriba, extendiendo la cadera.","Aprieta el glúteo en la parte alta sin arquear la espalda baja.","Baja controladamente y repite, luego cambia de lado."],
+    breathing:"Exhala al empujar, inhala al bajar.", errors:"Arquear la espalda baja; usar impulso en lugar de control.",
+    correct:"Sientes el trabajo en el glúteo de la pierna que se mueve, no en la espalda.",
+    increase:"Cuando el movimiento sea controlado y fácil con la resistencia actual.",
+    easier:"Reduce el rango de movimiento o quita la banda.", harder:"Añade una pausa arriba de 2 segundos.", pose:"birddog", template:"quadruped"},
+  abduccion_cadera:{name:"Abducción de cadera de pie", group:"piernas", muscles:"Glúteo medio, cadera", equip:"Banda alrededor de los tobillos o por encima de las rodillas",
+    start:"De pie, sosteniéndote de algo estable si lo necesitas, banda alrededor de los tobillos.",
+    steps:["Mantén el torso erguido y estable.","Eleva una pierna hacia el lado, manteniéndola recta.","Evita inclinar el torso hacia el lado contrario.","Baja controladamente y repite, luego cambia de lado."],
+    breathing:"Exhala al elevar, inhala al bajar.", errors:"Inclinar el torso para ganar altura; balancear la pierna con impulso.",
+    correct:"Sientes el trabajo en la cadera externa, con el torso quieto.",
+    increase:"Cuando puedas mantener el torso estable durante todas las repeticiones.",
+    easier:"Reduce la altura de la elevación o la resistencia.", harder:"Aumenta la resistencia o añade una pausa.", pose:"hipabd", template:"standing"},
+  gemelos:{name:"Elevación de talones (gemelos) con banda", group:"piernas", muscles:"Pantorrillas (gemelos)", equip:"Banda bajo los pies, opcional",
+    start:"De pie, pies al ancho de la cadera, banda bajo los pies sosteniendo los extremos si la usas.",
+    steps:["Mantén el equilibrio apoyándote en algo si lo necesitas.","Eleva los talones despegando del suelo, apoyándote en las puntas.","Mantén 1-2 segundos arriba.","Baja controladamente sin dejarte caer."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Rebotar en lugar de controlar el descenso.",
+    correct:"Sientes el trabajo en la pantorrilla, con buen equilibrio.",
+    increase:"Cuando el movimiento sea fácil y controlado con muchas repeticiones de sobra.",
+    easier:"Hazlo sin banda o apoyado en una pared.", harder:"Añade banda o hazlo a una sola pierna.", pose:"calf", template:"standing"},
+
+  remo_unilateral:{name:"Remo a una mano con banda", group:"espalda", muscles:"Espalda, bíceps, core (anti-rotación)", equip:"Banda anclada frente a ti a la altura del pecho",
+    start:"De pie, de frente al anclaje, sosteniendo la banda con una mano, brazo extendido.",
+    steps:["Mantén el torso estable, evitando rotar.","Tira de la banda llevando el codo hacia atrás, cerca del cuerpo.","Aprieta el omóplato en la parte final.","Regresa con control y repite, luego cambia de mano."],
+    breathing:"Exhala al tirar, inhala al volver.", errors:"Rotar el torso para ayudarse; encoger el hombro.",
+    correct:"Sientes el trabajo en la espalda, con el torso estable y sin rotar.",
+    increase:"Cuando completes las repeticiones de ambos lados con control.",
+    easier:"Reduce la resistencia o el rango de movimiento.", harder:"Aumenta la resistencia o el tiempo de sostén al final.", pose:"row", template:"standing"},
+  extension_lumbar:{name:"Extensión lumbar (Superman)", group:"espalda", muscles:"Espalda baja, glúteos, estabilidad", equip:"Ninguno (opcional: colchoneta)",
+    start:"Boca abajo en el suelo, brazos extendidos al frente, piernas extendidas.",
+    steps:["Aprieta el abdomen suavemente antes de moverte.","Eleva al mismo tiempo brazos, pecho y piernas unos centímetros del suelo.","Mantén el cuello neutro, mirando hacia abajo.","Baja controladamente sin dejarte caer de golpe."],
+    breathing:"Exhala al elevar, inhala al bajar.", errors:"Elevar demasiado forzando el cuello; movimientos bruscos.",
+    correct:"Sientes el trabajo en la espalda baja y los glúteos, sin dolor agudo.",
+    increase:"Cuando puedas sostener la posición elevada con control.",
+    easier:"Eleva solo la parte superior o solo las piernas, no ambas a la vez.", harder:"Añade una pausa de 2-3 segundos arriba.", pose:"superman", template:"prone"},
+  face_pull:{name:"Face pull con banda", group:"espalda", muscles:"Hombro posterior, espalda alta", equip:"Banda anclada a la altura de la cara",
+    start:"De pie, banda anclada frente a ti a la altura de la cara, brazos extendidos sosteniendo los extremos.",
+    steps:["Mantén el pecho erguido.","Tira de la banda hacia tu cara, separando las manos y llevando los codos hacia atrás y arriba.","Aprieta los omóplatos al final del movimiento.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al tirar, inhala al volver.", errors:"Encoger los hombros; tirar solo con los brazos sin mover los omóplatos.",
+    correct:"Sientes el trabajo en la parte posterior del hombro y la espalda alta.",
+    increase:"Cuando el movimiento sea controlado y con esfuerzo moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia.", pose:"facepull", template:"standing"},
+
+  curl_martillo:{name:"Curl martillo con banda", group:"brazos", muscles:"Bíceps, antebrazo", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, brazos extendidos hacia abajo, palmas mirando hacia el cuerpo.",
+    steps:["Mantén los codos fijos junto al torso.","Flexiona los codos llevando las manos hacia los hombros, con las palmas siempre enfrentadas.","Aprieta el brazo en la parte alta.","Baja controladamente sin soltar la tensión."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Mover los codos hacia adelante; usar impulso del cuerpo.",
+    correct:"Sientes el trabajo en el brazo y antebrazo, con los codos quietos.",
+    increase:"Cuando el movimiento sea fácil con la banda actual y te sobren repeticiones.",
+    easier:"Reduce la resistencia o el rango de movimiento.", harder:"Aumenta la resistencia o añade una pausa arriba.", pose:"curl", template:"standing"},
+  patada_triceps:{name:"Patada de tríceps inclinado con banda", group:"brazos", muscles:"Tríceps", equip:"Banda bajo el pie o anclada baja detrás",
+    start:"De pie, torso inclinado hacia adelante, codo flexionado y pegado al torso, sosteniendo la banda.",
+    steps:["Mantén la espalda recta y el core firme.","Extiende el antebrazo hacia atrás sin mover el codo.","Aprieta el tríceps al final del movimiento.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al extender, inhala al flexionar.", errors:"Mover el codo durante el ejercicio; redondear la espalda.",
+    correct:"Sientes el trabajo en la parte posterior del brazo, con el codo fijo.",
+    increase:"Cuando el movimiento sea controlado y fácil.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia.", pose:"tricepkick", template:"standing"},
+
+  elevacion_frontal:{name:"Elevación frontal con banda", group:"hombros", muscles:"Hombro anterior", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, brazos extendidos hacia abajo frente al cuerpo, palmas hacia atrás.",
+    steps:["Mantén los brazos casi rectos, con una ligera flexión de codo.","Eleva los brazos hacia adelante hasta la altura del hombro.","Evita usar impulso del torso.","Baja controladamente a la posición inicial."],
+    breathing:"Exhala al subir, inhala al bajar.", errors:"Subir los brazos más arriba del hombro; balancear el torso.",
+    correct:"Sientes el trabajo en la parte frontal del hombro.",
+    increase:"Cuando el movimiento sea fácil y controlado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o añade una pausa.", pose:"frontraise", template:"standing"},
+  press_arnold:{name:"Press Arnold con banda", group:"hombros", muscles:"Hombros, tríceps", equip:"Banda bajo los pies",
+    start:"De pie sobre la banda, manos frente a los hombros, palmas mirando hacia ti.",
+    steps:["Mantén el core firme, sin arquear la espalda baja.","Empuja hacia arriba mientras rotas las muñecas, terminando con las palmas hacia adelante.","Evita bloquear los codos con fuerza.","Baja controladamente rotando de vuelta a la posición inicial."],
+    breathing:"Exhala al empujar hacia arriba, inhala al bajar.", errors:"Arquear la espalda; rotar demasiado rápido.",
+    correct:"Sientes el trabajo en todo el hombro, con el core estable.",
+    increase:"Cuando el movimiento sea controlado y con esfuerzo moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia, o quita la rotación.", harder:"Aumenta la resistencia.", pose:"overhead", template:"standing"},
+  flexiones_banda:{name:"Flexiones de brazos con banda", group:"hombros", muscles:"Pecho, hombros, tríceps, core", equip:"Banda alrededor de la espalda, sostenida con las manos",
+    start:"Posición de plancha alta (o sobre rodillas), banda rodeando la espalda alta y sostenida con ambas manos en el suelo.",
+    steps:["Mantén el cuerpo en línea recta de la cabeza a las rodillas o pies.","Baja el pecho hacia el suelo flexionando los codos.","Evita que las caderas suban o bajen.","Empuja el suelo para volver arriba, venciendo la resistencia de la banda."],
+    breathing:"Inhala al bajar, exhala al subir.", errors:"Dejar caer las caderas; codos muy abiertos hacia los lados.",
+    correct:"Sientes el trabajo en pecho, hombros y tríceps, con el core firme.",
+    increase:"Cuando completes las repeticiones con técnica correcta y control.",
+    easier:"Hazlo con las rodillas apoyadas o sin banda.", harder:"Añade la banda o eleva los pies.", pose:"plank", template:"plank"},
+
+  giro_tronco:{name:"Giro de tronco de pie con banda", group:"core", muscles:"Core, oblicuos", equip:"Banda anclada a un lado, a la altura del pecho",
+    start:"De pie, de costado respecto al anclaje, banda sostenida con ambas manos frente al pecho, brazos extendidos.",
+    steps:["Mantén las caderas mirando al frente, sin moverlas.","Gira el torso alejándote del anclaje, llevando las manos hacia el lado contrario.","Mantén los brazos extendidos durante todo el giro.","Regresa con control a la posición inicial, luego cambia de lado."],
+    breathing:"Exhala al girar, inhala al volver.", errors:"Mover las caderas en lugar del torso; usar impulso brusco.",
+    correct:"Sientes el trabajo en el abdomen y los oblicuos, con las caderas estables.",
+    increase:"Cuando puedas controlar el giro completo sin perder la postura.",
+    easier:"Reduce la amplitud del giro o la resistencia.", harder:"Aumenta la amplitud o la resistencia.", pose:"twist", template:"standing"},
+  elevacion_piernas:{name:"Elevación de piernas tumbado", group:"core", muscles:"Abdomen bajo, flexores de cadera", equip:"Banda alrededor de los pies, anclada frente a ti (opcional)",
+    start:"Acostado boca arriba, piernas extendidas hacia el techo o ligeramente bajadas, manos a los lados o bajo la cadera.",
+    steps:["Presiona la espalda baja contra el suelo.","Baja las piernas lentamente, manteniéndolas lo más rectas posible.","Baja solo hasta donde puedas mantener la espalda baja pegada al suelo.","Sube controladamente a la posición inicial."],
+    breathing:"Inhala al bajar, exhala al subir.", errors:"Arquear la espalda baja; bajar demasiado rápido.",
+    correct:"Sientes el trabajo en el abdomen bajo, con la espalda baja apoyada.",
+    increase:"Cuando puedas bajar más las piernas sin arquear la espalda.",
+    easier:"Flexiona las rodillas o baja menos las piernas.", harder:"Baja más las piernas o añade banda en los pies.", pose:"bridge", template:"lying"},
+  abdominal_arrodillado:{name:"Crunch abdominal arrodillado con banda", group:"core", muscles:"Abdomen (recto abdominal)", equip:"Banda anclada en un punto alto",
+    start:"Arrodillado de frente al anclaje, sosteniendo la banda con ambas manos cerca de la cabeza.",
+    steps:["Mantén las caderas quietas durante todo el movimiento.","Flexiona el torso hacia abajo, contrayendo el abdomen, como un crunch.","Lleva los codos hacia los muslos sin tirar con los brazos.","Regresa controladamente a la posición inicial."],
+    breathing:"Exhala al flexionar, inhala al volver.", errors:"Tirar con los brazos en vez del abdomen; mover las caderas.",
+    correct:"Sientes la contracción en el abdomen, con las caderas quietas.",
+    increase:"Cuando el movimiento sea controlado y con esfuerzo moderado.",
+    easier:"Reduce el rango de movimiento o la resistencia.", harder:"Aumenta la resistencia o el rango de movimiento.", pose:"hinge", template:"standing"},
+
+  circulos_cadera:{name:"Círculos de cadera", group:"movilidad", muscles:"Cadera (movilidad articular)", equip:"Ninguno",
+    start:"De pie, manos en la cintura, pies al ancho de los hombros.",
+    steps:["Mueve las caderas en un círculo amplio hacia un lado.","Mantén las rodillas con una ligera flexión.","Repite varias veces y luego invierte la dirección.","Mantén el movimiento suave y controlado."],
+    breathing:"Respiración natural.", errors:"Movimientos bruscos o demasiado rápidos.", correct:"Sientes mayor soltura en la cadera, sin dolor.",
+    increase:"No aplica: es un ejercicio de movilidad.", easier:"Reduce la amplitud del círculo.", harder:"Aumenta ligeramente la amplitud.", pose:"hiprot", template:"standing"},
+  rotacion_tronco:{name:"Rotación de tronco de pie", group:"movilidad", muscles:"Core, espalda (movilidad)", equip:"Ninguno",
+    start:"De pie, pies al ancho de los hombros, brazos relajados o cruzados sobre el pecho.",
+    steps:["Gira el torso suavemente hacia un lado.","Deja que los brazos acompañen el movimiento con suavidad.","Regresa al centro y repite hacia el otro lado.","Mantén las caderas lo más quietas posible."],
+    breathing:"Respiración natural y relajada.", errors:"Forzar el giro más allá de lo cómodo.", correct:"Sientes el torso más suelto, sin dolor en la espalda.",
+    increase:"No aplica: es un ejercicio de movilidad.", easier:"Reduce la amplitud del giro.", harder:"Aumenta ligeramente la amplitud.", pose:"twist", template:"standing"},
+  estiramiento_banda:{name:"Estiramiento con banda por encima de la cabeza", group:"movilidad", muscles:"Hombros, espalda alta (estiramiento)", equip:"Banda sostenida con ambas manos",
+    start:"De pie, sosteniendo la banda con ambas manos, un poco más separadas que el ancho de los hombros.",
+    steps:["Eleva los brazos por encima de la cabeza manteniendo la banda tensa.","Lleva los brazos suavemente hacia un lado.","Mantén unos segundos y siente el estiramiento.","Regresa al centro y repite hacia el otro lado."],
+    breathing:"Respiración lenta y profunda durante el estiramiento.", errors:"Encoger los hombros hacia las orejas; rebotar en el estiramiento.",
+    correct:"Sientes un estiramiento suave, nunca dolor agudo.",
+    increase:"No aplica: es un ejercicio de movilidad y estiramiento.", easier:"Reduce la amplitud o separa más las manos en la banda.", harder:"Aumenta ligeramente la amplitud.", pose:"overheadstretch", template:"standing"}
+};
+
+const WORKOUTS = {
+  A:{label:"Fuerza A", exercises:["sentadilla","remo","press_pecho","curl_biceps","puente_gluteos","pallof_press"]},
+  B:{label:"Fuerza B", exercises:["peso_muerto","press_hombros","jalon","extension_triceps","caminata_lateral","bird_dog"]},
+  C:{label:"Fuerza C", exercises:["sentadilla","peso_muerto","press_pecho","remo","elevaciones_laterales","puente_gluteos","plancha_principiantes"]},
+  // Fase 2 (semanas 5-8): mismo patrón semanal, pero con ejercicios nuevos del catálogo ampliado para variar y subir intensidad
+  D:{label:"Fuerza D", exercises:["zancada","remo_unilateral","press_arnold","curl_martillo","elevacion_piernas","gemelos"]},
+  E:{label:"Fuerza E", exercises:["peso_muerto","face_pull","elevacion_frontal","patada_triceps","giro_tronco","abduccion_cadera"]},
+  F:{label:"Fuerza F", exercises:["sentadilla","flexiones_banda","jalon","patada_gluteo","abdominal_arrodillado","extension_lumbar"]}
+};
+
+const WARMUP = [
+  {id:"marcha_sitio", seconds:60},
+  {id:"movilidad_hombros", seconds:45},
+  {id:"movilidad_cadera", seconds:45, custom:"Movilidad de cadera (círculos)"},
+  {id:"sentadilla_sin_banda", seconds:40, custom:"Sentadillas sin resistencia"},
+  {id:"marcha_sitio", seconds:40, custom:"Elevación de rodillas"},
+  {id:"movilidad_tobillos", seconds:40, custom:"Movilidad suave de tobillos"}
+];
+
+// El patrón semanal (fuerza / caminata / recuperación / descanso) es siempre el mismo;
+// lo que cambia según la fase es QUÉ sesión de fuerza toca (A/B/C en semanas 1-4, D/E/F en semanas 5-8),
+// para ir variando los ejercicios a medida que avanza la progresión.
+function getScheduleForWeek(week){
+  const keys = (week||1) <= 4 ? ["A","B","C"] : ["D","E","F"];
+  return [
+    {day:"Lunes", type:"fuerza", workout:keys[0]},
+    {day:"Martes", type:"caminata"},
+    {day:"Miércoles", type:"fuerza", workout:keys[1]},
+    {day:"Jueves", type:"recuperacion"},
+    {day:"Viernes", type:"fuerza", workout:keys[2]},
+    {day:"Sábado", type:"caminata"},
+    {day:"Domingo", type:"descanso"}
+  ];
+}
+
+const MOTIV_MSGS = [
+  "Buen trabajo. Tu constancia es más importante que entrenar al máximo.",
+  "Hoy estás construyendo fuerza para mañana.",
+  "Si hoy necesitas reducir la resistencia, está bien. La técnica es primero.",
+  "Cada sesión cuenta, sin importar el tamaño del esfuerzo.",
+  "Estás creando un hábito que tu cuerpo agradecerá.",
+  "Ir despacio también es progresar."
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+// El progreso ya no vive en este teléfono: vive en tu cuenta de Firebase, así que si pierdes
+// el teléfono, solo tienes que iniciar sesión de nuevo en otro para recuperarlo todo.
+let state = null;        // se llena después de iniciar sesión (ver bootstrapAuth más abajo)
+let currentUid = null;    // id de tu usuario en Firebase, una vez autenticado
+
+function defaultState(){
+  return {
+    profile:{name:"", unit:"km", restDuration:75, goal:"habito", reminders:true, dark:false,
+      lastSessionMode:"guided", lastSetMode:"timed", voiceEnabled:true},
+    currentWeek:1,
+    completions:{},      // "YYYY-MM-DD|type|workout" -> true
+    workoutLogs:[],       // {date, week, workoutId, exercises:[{id,band,sets,reps,effort,notes}]}
+    walkLogs:[],           // {date, duration, distance, effort, notes}
+    bandLevel:{}            // exerciseId -> band index 0..4
+  };
+}
+function mergeWithDefaults(data){
+  return Object.assign(defaultState(), data, {profile:Object.assign(defaultState().profile, (data&&data.profile)||{})});
+}
+function saveState(){
+  if(!currentUid){ return; } // seguridad: nunca debería pasar, pero evita escribir sin sesión
+  firebase.database().ref('users/'+currentUid).set(state).catch(function(err){
+    toast('No se pudo guardar: revisa tu conexión a internet');
+  });
+}
+
+/* =========================================================
+   LOGIN / CUENTA (Firebase Authentication)
+========================================================= */
+let authMode = 'login';
+function toggleAuthMode(){
+  authMode = authMode==='login' ? 'register' : 'login';
+  document.getElementById('authSubtitle').textContent = authMode==='login' ? 'Inicia sesión para ver tu progreso' : 'Crea tu cuenta (solo tú la usarás)';
+  document.getElementById('authSubmitBtn').textContent = authMode==='login' ? 'INICIAR SESIÓN' : 'CREAR CUENTA';
+  document.getElementById('authToggleBtn').textContent = authMode==='login' ? '¿No tienes cuenta? Crear una' : '¿Ya tienes cuenta? Iniciar sesión';
+  document.getElementById('authError').style.display = 'none';
+}
+function showAuthError(msg){
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+function translateAuthError(err){
+  const map = {
+    'auth/invalid-email':'Ese correo no es válido.',
+    'auth/user-not-found':'No existe una cuenta con ese correo. Toca "Crear una".',
+    'auth/wrong-password':'Contraseña incorrecta.',
+    'auth/invalid-credential':'Correo o contraseña incorrectos.',
+    'auth/email-already-in-use':'Ya existe una cuenta con ese correo. Intenta iniciar sesión.',
+    'auth/weak-password':'La contraseña debe tener al menos 6 caracteres.',
+    'auth/network-request-failed':'Sin conexión a internet. Revisa tu red e intenta de nuevo.'
+  };
+  return map[err.code] || ('No se pudo completar: ' + err.message);
+}
+function handleAuthSubmit(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){ showAuthError('Completa tu correo y tu contraseña.'); return; }
+  document.getElementById('authError').style.display = 'none';
+  const action = authMode==='login'
+    ? firebase.auth().signInWithEmailAndPassword(email, password)
+    : firebase.auth().createUserWithEmailAndPassword(email, password);
+  action.catch(function(err){ showAuthError(translateAuthError(err)); });
+}
+function handleForgotPassword(){
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ showAuthError('Escribe tu correo arriba y vuelve a tocar este enlace.'); return; }
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(function(){ showAuthError('Listo: te enviamos un correo para restablecer tu contraseña.'); })
+    .catch(function(err){ showAuthError(translateAuthError(err)); });
+}
+function doLogout(){
+  firebase.auth().signOut();
+}
+function bootstrapAuth(){
+  firebase.auth().onAuthStateChanged(function(user){
+    if(user){
+      currentUid = user.uid;
+      document.getElementById('authCard').style.display = 'none';
+      document.getElementById('authLoading').style.display = 'flex';
+      firebase.database().ref('users/'+currentUid).once('value').then(function(snapshot){
+        state = mergeWithDefaults(snapshot.val());
+        document.getElementById('authGate').style.display = 'none';
+        document.getElementById('authLoading').style.display = 'none';
+        document.getElementById('appRoot').style.display = '';
+        init();
+      }).catch(function(err){
+        document.getElementById('authLoading').style.display = 'none';
+        document.getElementById('authCard').style.display = 'block';
+        showAuthError('No se pudo cargar tu progreso: revisa tu conexión a internet.');
+      });
+    } else {
+      currentUid = null; state = null; guided = null; activeWorkout = null;
+      document.getElementById('appRoot').style.display = 'none';
+      document.getElementById('authLoading').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      document.getElementById('authCard').style.display = 'block';
+      document.getElementById('authEmail').value = '';
+      document.getElementById('authPassword').value = '';
+      authMode = 'login';
+      document.getElementById('authSubtitle').textContent = 'Inicia sesión para ver tu progreso';
+      document.getElementById('authSubmitBtn').textContent = 'INICIAR SESIÓN';
+      document.getElementById('authToggleBtn').textContent = '¿No tienes cuenta? Crear una';
+      document.getElementById('authError').style.display = 'none';
+    }
+  });
+}
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function dayName(date){ return ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"][date.getDay()]; }
+function scheduleForDate(date){
+  const idx = (date.getDay()+6)%7; // Monday=0
+  return getScheduleForWeek(state.currentWeek)[idx];
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+const NAV_ITEMS = [
+  {id:"home", label:"Inicio", icon:"home"},
+  {id:"week", label:"Semana", icon:"dumbbell"},
+  {id:"library", label:"Ejercicios", icon:"book"},
+  {id:"progress", label:"Progreso", icon:"chart"},
+  {id:"more", label:"Más", icon:"more"}
+];
+const MORE_VIEWS = ["calendar","walks","safety","glucose","settings"];
+
+function icon(name){
+  const icons = {
+    home:'<path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/>',
+    dumbbell:'<path d="M4 9v6"/><path d="M2 8v8"/><path d="M20 9v6"/><path d="M22 8v8"/><path d="M6.5 12h11"/>',
+    book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M19 17H6a2 2 0 0 0-2 2"/>',
+    chart:'<path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/>',
+    more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/>',
+    walk:'<circle cx="13" cy="4" r="2"/><path d="M9 21l2-6 -2-3 1-5 4 1 2 4 3 2"/><path d="M9 21l3-4"/>',
+    shield:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/>',
+    drop:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name]||''}</svg>`;
+}
+
+function buildNav(){
+  const wrap = document.getElementById('bottomnav');
+  wrap.innerHTML = NAV_ITEMS.map(it=>`<button data-nav="${it.id}" onclick="${it.id==='more'?'openMoreSheet()':`go('${it.id}')`}">${icon(it.icon)}<span>${it.label}</span></button>`).join('');
+}
+function setActiveNav(view){
+  document.querySelectorAll('#bottomnav button').forEach(b=>b.classList.remove('active'));
+  let navId = view;
+  if(MORE_VIEWS.includes(view)) navId = 'more';
+  if(view==='workout') navId='week';
+  const btn = document.querySelector(`#bottomnav button[data-nav="${navId}"]`);
+  if(btn) btn.classList.add('active');
+}
+
+let currentView = 'home';
+function go(view){
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+view);
+  if(el) el.classList.add('active');
+  setActiveNav(view);
+  closeOverlay();
+  window.scrollTo(0,0);
+  renderView(view);
+}
+function renderView(view){
+  if(view==='home') renderHome();
+  else if(view==='week') renderWeekView();
+  else if(view==='library') renderLibrary();
+  else if(view==='calendar') renderCalendar();
+  else if(view==='walks') renderWalks();
+  else if(view==='progress') renderProgress();
+  else if(view==='settings') renderSettings();
+}
+
+function openMoreSheet(){
+  const items = [
+    {id:'calendar', label:'Calendario', icon:'calendar'},
+    {id:'walks', label:'Caminatas', icon:'walk'},
+    {id:'safety', label:'Seguridad', icon:'shield'},
+    {id:'glucose', label:'Actividad física y glucosa', icon:'drop'},
+    {id:'settings', label:'Configuración', icon:'gear'}
+  ];
+  openSheet(`
+    <div class="sheethead"><h3>Más</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    ${items.map(it=>`<div class="check" onclick="go('${it.id}')"><div class="tick" style="border-color:transparent;color:var(--pine-text);">${icon(it.icon)}</div><div class="name">${it.label}</div></div>`).join('')}
+  `);
+}
+
+/* =========================================================
+   MODAL / SHEET / TOAST
+========================================================= */
+function openSheet(html){
+  document.getElementById('sheetContent').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeOverlay(){ document.getElementById('overlay').classList.remove('open'); clearActiveTimer(); }
+document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeOverlay(); });
+
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   ILLUSTRATIONS (inline SVG stick-figure generator)
+========================================================= */
+function poseCoords(pose){
+  // returns {head, shoulderL, shoulderR, hip, kneeL, kneeR, footL, footR, handL, handR, bandFrom, bandTo}
+  const cx=59, baseHipY=118, baseFootY=205, shoulderY=68;
+  let hipY=baseHipY, kneeBendOut=0, handL={x:cx-30,y:118}, handR={x:cx+30,y:118}, footL={x:cx-18,y:baseFootY}, footR={x:cx+18,y:baseFootY}, bandFrom=null, bandTo=null, torsoLean=0, kneeY=160, extra="";
+  switch(pose.type){
+    case 'squat_start':
+      handL={x:cx-26,y:70}; handR={x:cx+26,y:70};
+      bandFrom={x:footL.x,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'squat_end':
+      hipY=155; kneeY=150; footL={x:cx-26,y:baseFootY}; footR={x:cx+26,y:baseFootY};
+      handL={x:cx-30,y:78}; handR={x:cx+30,y:78};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'hinge_start':
+      handL={x:cx-8,y:126}; handR={x:cx+8,y:126};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'hinge_end':
+      torsoLean=26; hipY=118; handL={x:cx-6,y:168}; handR={x:cx+6,y:168};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'bridge_start': case 'bridge_end':
+      return lyingPose(pose.type==='bridge_end');
+    case 'lateral_a': case 'lateral_b':
+      hipY=140; kneeY=175; footL={x:cx-34,y:baseFootY}; footR={x:pose.type==='lateral_b'?cx-6:cx+18,y:baseFootY};
+      handL={x:cx-14,y:130}; handR={x:cx+14,y:130};
+      bandFrom={x:footL.x,y:baseFootY-10}; bandTo=[{x:footR.x,y:baseFootY-10}];
+      break;
+    case 'row_start':
+      handL={x:cx-16,y:100}; handR={x:cx+16,y:100};
+      bandFrom={x:cx,y:100}; bandTo=[handL,handR]; extra="anchorfront";
+      break;
+    case 'row_end':
+      handL={x:cx-32,y:82}; handR={x:cx+32,y:82};
+      bandFrom={x:cx,y:80}; bandTo=[handL,handR]; extra="anchorfront";
+      break;
+    case 'pulldown_start':
+      handL={x:cx-16,y:32}; handR={x:cx+16,y:32};
+      bandFrom={x:cx,y:10}; bandTo=[handL,handR]; extra="anchortop";
+      break;
+    case 'pulldown_end':
+      handL={x:cx-30,y:76}; handR={x:cx+30,y:76};
+      bandFrom={x:cx,y:10}; bandTo=[handL,handR]; extra="anchortop";
+      break;
+    case 'curl_start':
+      handL={x:cx-24,y:132}; handR={x:cx+24,y:132};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'curl_end':
+      handL={x:cx-24,y:74}; handR={x:cx+24,y:74};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'tricep_start':
+      handR={x:cx+18,y:52}; handL={x:cx-18,y:100};
+      bandFrom={x:cx,y:8}; bandTo=[handR]; extra="anchortop one-arm";
+      break;
+    case 'tricep_end':
+      handR={x:cx+14,y:100}; handL={x:cx-18,y:100};
+      bandFrom={x:cx,y:8}; bandTo=[handR]; extra="anchortop one-arm";
+      break;
+    case 'press_start':
+      handL={x:cx-24,y:76}; handR={x:cx+24,y:76};
+      bandFrom={x:cx,y:76}; bandTo=[handL,handR]; extra="anchorback";
+      break;
+    case 'press_end':
+      handL={x:cx-32,y:76}; handR={x:cx+32,y:76};
+      bandFrom={x:cx,y:76}; bandTo=[handL,handR]; extra="anchorback";
+      break;
+    case 'overhead_start':
+      handL={x:cx-22,y:78}; handR={x:cx+22,y:78};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'overhead_end':
+      handL={x:cx-16,y:34}; handR={x:cx+16,y:34};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'lateralraise_start':
+      handL={x:cx-10,y:120}; handR={x:cx+10,y:120};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'lateralraise_end':
+      handL={x:cx-40,y:70}; handR={x:cx+40,y:70};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'pallof_start':
+      handL={x:cx-4,y:78}; handR={x:cx+8,y:78};
+      bandFrom={x:cx+50,y:80}; bandTo=[handR]; extra="side-anchor";
+      break;
+    case 'pallof_end':
+      handL={x:cx-4,y:78}; handR={x:cx+34,y:78};
+      bandFrom={x:cx+50,y:80}; bandTo=[handR]; extra="side-anchor";
+      break;
+    case 'march_start':
+      footL={x:cx-16,y:baseFootY}; footR={x:cx+16,y:baseFootY};
+      handL={x:cx-22,y:130}; handR={x:cx+22,y:110};
+      break;
+    case 'march_end':
+      footR={x:cx+10,y:150}; kneeY=140; footL={x:cx-16,y:baseFootY};
+      handL={x:cx-10,y:110}; handR={x:cx+22,y:130};
+      break;
+    case 'shouldercircle_start':
+      handL={x:cx-26,y:110}; handR={x:cx+26,y:110};
+      break;
+    case 'shouldercircle_end':
+      handL={x:cx-30,y:56}; handR={x:cx+30,y:56};
+      break;
+    case 'lunge_start':
+      footL={x:cx-8,y:baseFootY-8}; footR={x:cx+22,y:baseFootY};
+      handL={x:cx-26,y:70}; handR={x:cx+26,y:70};
+      bandFrom={x:footR.x,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'lunge_end':
+      footL={x:cx-8,y:baseFootY-8}; footR={x:cx+22,y:baseFootY}; hipY=150; kneeY=170;
+      handL={x:cx-30,y:84}; handR={x:cx+30,y:84};
+      bandFrom={x:footR.x,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'hipabd_start':
+      footL={x:cx-14,y:baseFootY}; footR={x:cx+14,y:baseFootY};
+      handL={x:cx-16,y:130}; handR={x:cx+16,y:130};
+      break;
+    case 'hipabd_end':
+      footL={x:cx-14,y:baseFootY}; footR={x:cx+34,y:baseFootY-30};
+      handL={x:cx-16,y:130}; handR={x:cx+16,y:130};
+      break;
+    case 'calf_start':
+      footL={x:cx-16,y:baseFootY}; footR={x:cx+16,y:baseFootY};
+      handL={x:cx-16,y:130}; handR={x:cx+16,y:130};
+      break;
+    case 'calf_end':
+      footL={x:cx-16,y:baseFootY-10}; footR={x:cx+16,y:baseFootY-10}; hipY=112;
+      handL={x:cx-16,y:122}; handR={x:cx+16,y:122};
+      break;
+    case 'facepull_start':
+      handL={x:cx-20,y:70}; handR={x:cx+20,y:70};
+      bandFrom={x:cx,y:68}; bandTo=[handL,handR]; extra="anchorfront";
+      break;
+    case 'facepull_end':
+      handL={x:cx-26,y:46}; handR={x:cx+26,y:46};
+      bandFrom={x:cx,y:68}; bandTo=[handL,handR]; extra="anchorfront";
+      break;
+    case 'frontraise_start':
+      handL={x:cx-10,y:128}; handR={x:cx+10,y:128};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'frontraise_end':
+      handL={x:cx-8,y:66}; handR={x:cx+8,y:66};
+      bandFrom={x:cx,y:baseFootY}; bandTo=[handL,handR];
+      break;
+    case 'tricepkick_start':
+      torsoLean=18; handL={x:cx-20,y:118}; handR={x:cx+22,y:100};
+      bandFrom={x:cx+6,y:baseFootY}; bandTo=[handR];
+      break;
+    case 'tricepkick_end':
+      torsoLean=18; handL={x:cx-20,y:118}; handR={x:cx+34,y:120};
+      bandFrom={x:cx+6,y:baseFootY}; bandTo=[handR];
+      break;
+    case 'twist_start':
+      handL={x:cx-2,y:78}; handR={x:cx+10,y:78};
+      bandFrom={x:cx+50,y:80}; bandTo=[handR]; extra="side-anchor";
+      break;
+    case 'twist_end':
+      handL={x:cx-36,y:82}; handR={x:cx-24,y:82};
+      bandFrom={x:cx+50,y:80}; bandTo=[handR]; extra="side-anchor";
+      break;
+    case 'hiprot_start':
+      handL={x:cx-14,y:118}; handR={x:cx+14,y:118};
+      break;
+    case 'hiprot_end':
+      handL={x:cx-14,y:118}; handR={x:cx+14,y:118}; hipY=148;
+      break;
+    case 'overheadstretch_start':
+      handL={x:cx-20,y:40}; handR={x:cx+20,y:40};
+      break;
+    case 'overheadstretch_end':
+      handL={x:cx-36,y:52}; handR={x:cx+6,y:40};
+      break;
+    default:
+      break;
+  }
+  return {cx, head:{x:cx,y:32}, shoulderL:{x:cx-16,y:shoulderY+torsoLean*0.15}, shoulderR:{x:cx+16,y:shoulderY+torsoLean*0.15},
+    hip:{x:cx+torsoLean*0.4,y:hipY}, kneeL:{x:footL.x*0.5+cx*0.5,y:kneeY}, kneeR:{x:footR.x*0.5+cx*0.5,y:kneeY},
+    footL, footR, handL, handR, bandFrom, bandTo, torsoLean, extra};
+}
+function lyingPose(t){
+  // t: 0 = flat on floor, 1 = hips fully raised. Knee/foot/shoulder stay fixed (they're the pivots
+  // on the mat); only the hip travels, and it stays far enough from the knee at both ends so the
+  // thigh segment never shrinks to a sliver that a joint/torso cap could swallow.
+  const groundY=172, cx=59;
+  const knee={x:98,y:140}, foot={x:98,y:groundY}, shoulder={x:26,y:168}, head={x:18,y:162};
+  const hipFlat={x:65,y:167}, hipRaised={x:70,y:151};
+  const hip = {x:lerp(hipFlat.x,hipRaised.x,t), y:lerp(hipFlat.y,hipRaised.y,t)};
+  const bandAt = {x:(hip.x+knee.x)/2, y:(hip.y+knee.y)/2+4};
+  return {lying:true, head, hip, shoulder, kneeL:knee, footL:foot, cx, bandAt};
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+function lerpPt(p1,p2,t){ if(!p1||!p2) return p1||p2||null; return {x:lerp(p1.x,p2.x,t), y:lerp(p1.y,p2.y,t)}; }
+function lerpCoords(c1,c2,t){
+  return {cx:c1.cx,
+    head:lerpPt(c1.head,c2.head,t), shoulderL:lerpPt(c1.shoulderL,c2.shoulderL,t), shoulderR:lerpPt(c1.shoulderR,c2.shoulderR,t),
+    hip:lerpPt(c1.hip,c2.hip,t), kneeL:lerpPt(c1.kneeL,c2.kneeL,t), kneeR:lerpPt(c1.kneeR,c2.kneeR,t),
+    footL:lerpPt(c1.footL,c2.footL,t), footR:lerpPt(c1.footR,c2.footR,t), handL:lerpPt(c1.handL,c2.handL,t), handR:lerpPt(c1.handR,c2.handR,t),
+    bandFrom:c1.bandFrom, bandTo: c1.bandTo && c2.bandTo ? c1.bandTo.map((h,i)=>lerpPt(h,c2.bandTo[i],t)) : c1.bandTo, extra:c1.extra};
+}
+// small offset point used to draw a natural-looking elbow/knee bend between two joints
+function bentPoint(p1,p2,side,amount){
+  const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+  const dx=p2.x-p1.x, dy=p2.y-p1.y, len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len, ny=dx/len;
+  return {x:mx+nx*amount*side, y:my+ny*amount*side};
+}
+function jointLine(p1,p2,w){ return `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#16302A" stroke-width="${w}" stroke-linecap="round"/>`; }
+function jointDot(p,r){ return `<circle cx="${p.x}" cy="${p.y}" r="${r||3.4}" fill="#16302A"/>`; }
+function anchorDot(x,y){ return `<circle cx="${x}" cy="${y}" r="6" fill="#C98A2C" stroke="#fff" stroke-width="2"/>`; }
+
+/* ---- filled "pictogram" humanoid renderer (instead of thin stick lines) ---- */
+const C_NAVY="#1E3A5F", C_SKIN="#5F93C9", C_FACE="#EAF2FB", C_OUTLINE="#15283D", C_BAND="#C98A2C";
+function groundLine(y){ return `<line x1="4" y1="${y||205}" x2="118" y2="${y||205}" stroke="#AEBBD0" stroke-width="2.4" stroke-dasharray="1 5" stroke-linecap="round"/>`; }
+// a filled rounded "stadium" shape between two points, used for every limb/torso segment
+function capsule(x1,y1,x2,y2,w,fill,noStroke){
+  const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy)||0.001;
+  const ux=dx/len, uy=dy/len, nx=-uy*w/2, ny=ux*w/2, r=w/2;
+  const p1=[x1+nx,y1+ny], p2=[x2+nx,y2+ny], p3=[x2-nx,y2-ny], p4=[x1-nx,y1-ny];
+  const strokeAttr = noStroke ? 'stroke="none"' : `stroke="${C_OUTLINE}" stroke-width="1.3"`;
+  return `<path d="M ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 0 ${p3[0].toFixed(1)} ${p3[1].toFixed(1)} L ${p4[0].toFixed(1)} ${p4[1].toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 0 0 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} Z" fill="${fill||C_SKIN}" ${strokeAttr} stroke-linejoin="round"/>`;
+}
+function shoeShape(x,y,rot){ return `<ellipse cx="${x}" cy="${y+2.5}" rx="9" ry="5.5" fill="${C_OUTLINE}" transform="rotate(${rot||0} ${x} ${y+2.5})"/>`; }
+function handShape(x,y){ return `<circle cx="${x}" cy="${y}" r="5.6" fill="${C_SKIN}" stroke="${C_OUTLINE}" stroke-width="1.3"/>`; }
+function headShape(x,y){
+  return `<circle cx="${x}" cy="${y}" r="14.5" fill="${C_FACE}" stroke="${C_OUTLINE}" stroke-width="1.4"/>
+    <path d="M ${(x-14.5).toFixed(1)} ${(y-1).toFixed(1)} a 14.5 14.5 0 0 1 29 0 Z" fill="${C_NAVY}" stroke="${C_OUTLINE}" stroke-width="1"/>
+    <circle cx="${(x-5).toFixed(1)}" cy="${(y+2).toFixed(1)}" r="1.5" fill="${C_OUTLINE}"/>
+    <circle cx="${(x+5).toFixed(1)}" cy="${(y+2).toFixed(1)}" r="1.5" fill="${C_OUTLINE}"/>`;
+}
+// pelvis/shorts block: one smooth no-seam ellipse sitting over the leg tops, instead of several overlapping capsules
+function hipBlock(hip){ return `<ellipse cx="${hip.x.toFixed(1)}" cy="${(hip.y-3).toFixed(1)}" rx="19" ry="15" fill="${C_NAVY}"/>`; }
+// shoulder cap: a plain navy circle (no stroke) so the shirt visually reaches out to where the arm attaches
+function shoulderCap(p){ return `<circle cx="${p.x}" cy="${p.y}" r="12" fill="${C_NAVY}"/>`; }
+function movementArrow(p1,p2,color){
+  if(!p1||!p2) return '';
+  const dx=p2.x-p1.x, dy=p2.y-p1.y, dist=Math.hypot(dx,dy);
+  if(dist<6) return '';
+  const ang=Math.atan2(dy,dx);
+  const ax=p1.x+dx*0.85, ay=p1.y+dy*0.85;
+  const a1={x:ax-8*Math.cos(ang-0.4), y:ay-8*Math.sin(ang-0.4)};
+  const a2={x:ax-8*Math.cos(ang+0.4), y:ay-8*Math.sin(ang+0.4)};
+  return `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${color||'#C98A2C'}" stroke-width="2.2" stroke-dasharray="1 4.5" stroke-linecap="round"/>
+    <polygon points="${ax},${ay} ${a1.x},${a1.y} ${a2.x},${a2.y}" fill="${color||'#C98A2C'}"/>`;
+}
+function drawFigure(coords){
+  if(coords.lying){
+    const {head,hip,shoulder,kneeL,footL,bandAt} = coords;
+    let svg = groundLine(176);
+    // torso + shorts drawn first (behind), legs drawn last (in front) so a short/raised thigh is never hidden under the torso's end-cap
+    const neckTop = {x:head.x+9, y:head.y+5};
+    svg += capsule(neckTop.x,neckTop.y,shoulder.x,shoulder.y,18,C_NAVY,true);
+    svg += capsule(shoulder.x,shoulder.y,hip.x,hip.y,20,C_NAVY,true);
+    svg += hipBlock(hip);
+    svg += capsule(hip.x,hip.y,kneeL.x,kneeL.y,13,C_SKIN);          // thigh
+    svg += capsule(kneeL.x,kneeL.y,footL.x,footL.y,11,C_SKIN);       // shin
+    svg += shoeShape(footL.x,footL.y,85);
+    if(bandAt) svg += `<ellipse cx="${bandAt.x}" cy="${bandAt.y}" rx="22" ry="7" fill="none" stroke="${C_BAND}" stroke-width="4.6" stroke-linecap="round"/>`;
+    svg += headShape(head.x,head.y);
+    return svg;
+  }
+  const {head,shoulderL,shoulderR,hip,kneeL,kneeR,footL,footR,handL,handR,bandFrom,bandTo} = coords;
+  const elbowL = bentPoint(shoulderL,handL,-1,10), elbowR = bentPoint(shoulderR,handR,1,10);
+  const neckTop = {x:(shoulderL.x+shoulderR.x)/2, y:head.y+6};
+  let svg = groundLine(205);
+  // legs (behind torso)
+  svg += capsule(hip.x,hip.y,kneeL.x,kneeL.y,13,C_SKIN) + capsule(kneeL.x,kneeL.y,footL.x,footL.y,11,C_SKIN) + shoeShape(footL.x,footL.y);
+  svg += capsule(hip.x,hip.y,kneeR.x,kneeR.y,13,C_SKIN) + capsule(kneeR.x,kneeR.y,footR.x,footR.y,11,C_SKIN) + shoeShape(footR.x,footR.y);
+  // pelvis / shorts (one smooth shape, no seams against the legs)
+  svg += hipBlock(hip);
+  // torso: a single no-stroke capsule reaching from just under the chin down to the hip
+  svg += capsule(neckTop.x,neckTop.y,hip.x,hip.y,27,C_NAVY,true);
+  // shoulder caps extend the shirt out to where each arm attaches
+  svg += shoulderCap(shoulderL) + shoulderCap(shoulderR);
+  // arms (in front of torso)
+  svg += capsule(shoulderL.x,shoulderL.y,elbowL.x,elbowL.y,10,C_SKIN) + capsule(elbowL.x,elbowL.y,handL.x,handL.y,8.5,C_SKIN) + handShape(handL.x,handL.y);
+  svg += capsule(shoulderR.x,shoulderR.y,elbowR.x,elbowR.y,10,C_SKIN) + capsule(elbowR.x,elbowR.y,handR.x,handR.y,8.5,C_SKIN) + handShape(handR.x,handR.y);
+  svg += headShape(head.x,head.y);
+  // band drawn last, on top of the body, so it stays visible even when the anchor sits behind the torso (row, chest press, pallof press)
+  if(bandFrom && bandTo){
+    bandTo.forEach(h=>{ svg+=bandWave(bandFrom.x,bandFrom.y,h.x,h.y); });
+    svg+=anchorDot(bandFrom.x,bandFrom.y);
+  }
+  return svg;
+}
+function drawQuadruped(t){
+  // t: 0 = neutral, 1 = arm+leg fully extended
+  const y=120;
+  const armShoulder={x:30,y}, armHandNeutral={x:30,y:150}, armHandExt={x:6,y:96};
+  const legHip={x:90,y}, legFootNeutral={x:90,y:152}, legFootExt={x:112,y:150};
+  const armHand=lerpPt(armHandNeutral,armHandExt,t), legFoot=lerpPt(legFootNeutral,legFootExt,t);
+  const armElbow=bentPoint(armShoulder,armHand,-1,7), legKnee=bentPoint(legHip,legFoot,1,7);
+  let svg = groundLine(170);
+  svg += capsule(24,y-6,30,144,9,C_SKIN);   // stabilizing back leg (static)
+  svg += capsule(96,y-6,90,144,9,C_SKIN);   // stabilizing front leg (static)
+  svg += capsule(armShoulder.x,armShoulder.y,legHip.x,legHip.y,19,C_NAVY,true); // torso, no stroke
+  svg += shoulderCap(armShoulder) + `<circle cx="${legHip.x}" cy="${legHip.y}" r="12" fill="${C_NAVY}"/>`;
+  svg += capsule(armShoulder.x,armShoulder.y,armElbow.x,armElbow.y,9,C_SKIN)+capsule(armElbow.x,armElbow.y,armHand.x,armHand.y,7.5,C_SKIN)+handShape(armHand.x,armHand.y);
+  svg += capsule(legHip.x,legHip.y,legKnee.x,legKnee.y,10,C_SKIN)+capsule(legKnee.x,legKnee.y,legFoot.x,legFoot.y,8.5,C_SKIN)+shoeShape(legFoot.x,legFoot.y);
+  svg += headShape(24,y-10);
+  if(t>0.15) svg += movementArrow(armHandNeutral,armHand,'#8A5A16') + movementArrow(legFootNeutral,legFoot,'#8A5A16');
+  return svg;
+}
+function drawPlank(kneeVersion){
+  const y=112;
+  const head={x:16,y:y-8}, elbow={x:22,y:y+2}, floorArm={x:22,y:142};
+  const hip={x:kneeVersion?58:60, y:kneeVersion?126:118};
+  const end={x:kneeVersion?96:106, y:kneeVersion?148:140};
+  let svg = groundLine(152);
+  svg += capsule(hip.x,hip.y,end.x,end.y,14,C_SKIN);                 // legs together
+  svg += shoeShape(end.x,end.y, kneeVersion?0:-20);
+  svg += capsule(elbow.x,elbow.y,floorArm.x,floorArm.y,8,C_SKIN);   // supporting forearm
+  svg += capsule(elbow.x,elbow.y,hip.x,hip.y,18,C_NAVY,true);        // torso, no stroke
+  svg += `<circle cx="${elbow.x}" cy="${elbow.y}" r="11" fill="${C_NAVY}"/>`;
+  svg += headShape(head.x,head.y);
+  return svg;
+}
+// Superman / lumbar extension: lying face-down, chest+legs lifting off the floor
+function drawProne(t){
+  const groundY=150;
+  const hip={x:72,y:groundY-4};
+  const chestNeutral={x:42,y:groundY-2}, chestLift={x:42,y:groundY-18};
+  const handNeutral={x:14,y:groundY+1}, handLift={x:9,y:groundY-26};
+  const footNeutral={x:108,y:groundY+1}, footLift={x:111,y:groundY-16};
+  const chest=lerpPt(chestNeutral,chestLift,t), hand=lerpPt(handNeutral,handLift,t), foot=lerpPt(footNeutral,footLift,t);
+  const head={x:chest.x-16,y:chest.y-2};
+  let svg = groundLine(groundY);
+  svg += capsule(hip.x,hip.y,foot.x,foot.y,13,C_SKIN);                  // legs lifting
+  svg += shoeShape(foot.x,foot.y, -25);
+  svg += capsule(chest.x,chest.y,hip.x,hip.y,19,C_NAVY,true);          // torso, no stroke
+  svg += capsule(chest.x,chest.y,hand.x,hand.y,8,C_SKIN);               // arm reaching forward
+  svg += handShape(hand.x,hand.y);
+  svg += headShape(head.x, head.y);
+  return svg;
+}
+// smooth elastic-looking band: a gentle wave (not a jagged zigzag) so it reads clearly as a stretched band
+function bandWave(x1,y1,x2,y2,color){
+  color = color || "#C98A2C";
+  const len = Math.hypot(x2-x1,y2-y1)||1;
+  const nx = -(y2-y1)/len, ny=(x2-x1)/len;
+  const segs = Math.max(3, Math.round(len/22));
+  const amp = 5.5;
+  let d = `M ${x1} ${y1}`;
+  for(let i=1;i<=segs;i++){
+    const t0=(i-1)/segs, t1=i/segs, tm=(t0+t1)/2;
+    const side = i%2===0 ? 1 : -1;
+    const cx = x1+(x2-x1)*tm + nx*amp*side, cy = y1+(y2-y1)*tm + ny*amp*side;
+    const ex = x1+(x2-x1)*t1, ey = y1+(y2-y1)*t1;
+    d += ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+  }
+  return `<path d="${d}" fill="none" stroke="${color}" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+function miniSvg(inner){ return `<svg viewBox="0 0 122 216" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+
+function illustrationHTML(exId){
+  const ex = EXO[exId];
+  const legend = `<div class="illu-legend">
+      <span><i style="background:${C_BAND};"></i>Banda</span>
+      <span><i class="ring"></i>Punto de anclaje</span>
+    </div>`;
+
+  if(ex.template==='plank'){
+    // static hold: one frame only
+    const inner = drawPlank(exId==='plancha_principiantes');
+    return `<div class="illu-row">
+        <div class="illu-frame wide">${miniSvg(inner)}<div class="cap">MANTÉN LA POSICIÓN</div></div>
+      </div>${legend}
+      <p class="muted" style="font-size:12.5px;">Este es un ejercicio de sostén: no hay fase de movimiento, solo mantén la posición con el core firme.</p>`;
+  }
+  if(ex.template==='quadruped'){
+    const startInner = drawQuadruped(0), endInner = drawQuadruped(1);
+    return frames2(startInner, endInner, legend, 'El brazo y la pierna opuestos se extienden a la vez, manteniendo caderas y hombros nivelados.');
+  }
+  if(ex.template==='lying'){
+    const c1 = lyingPose(0), c2 = lyingPose(1);
+    return frames2(drawFigure(c1), drawFigure(c2), legend, 'Las caderas suben en línea recta, sin arquear la espalda baja.');
+  }
+  if(ex.template==='prone'){
+    const startInner = drawProne(0), endInner = drawProne(1);
+    return frames2(startInner, endInner, legend, 'Eleva pecho y piernas a la vez, sin forzar el cuello.');
+  }
+  const map = {
+    squat:['squat_start','squat_end'], hinge:['hinge_start','hinge_end'], lateral:['lateral_a','lateral_b'],
+    row:['row_start','row_end'], pulldown:['pulldown_start','pulldown_end'], curl:['curl_start','curl_end'],
+    tricep:['tricep_start','tricep_end'], press:['press_start','press_end'], overhead:['overhead_start','overhead_end'],
+    lateral_raise:['lateralraise_start','lateralraise_end'], pallof:['pallof_start','pallof_end'],
+    march:['march_start','march_end'], shouldercircle:['shouldercircle_start','shouldercircle_end'], bridge:['bridge_start','bridge_end'],
+    lunge:['lunge_start','lunge_end'], hipabd:['hipabd_start','hipabd_end'], calf:['calf_start','calf_end'],
+    facepull:['facepull_start','facepull_end'], frontraise:['frontraise_start','frontraise_end'],
+    tricepkick:['tricepkick_start','tricepkick_end'], twist:['twist_start','twist_end'],
+    hiprot:['hiprot_start','hiprot_end'], overheadstretch:['overheadstretch_start','overheadstretch_end']
+  };
+  const [s,e] = map[ex.pose] || ['squat_start','squat_end'];
+  const c1 = poseCoords({type:s}), c2 = poseCoords({type:e});
+  return frames2(drawFigure(c1), drawFigure(c2), legend, 'Pasa de INICIO a FINAL con control, sin usar impulso.');
+}
+function chevron(){ return `<div class="illu-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></div>`; }
+function frames2(startInner, endInner, legend, tip){
+  return `<div class="illu-row">
+      <div class="illu-frame">${miniSvg(startInner)}<div class="cap">INICIO</div></div>
+      ${chevron()}
+      <div class="illu-frame">${miniSvg(endInner)}<div class="cap">FINAL</div></div>
+    </div>${legend}
+    <p class="muted" style="font-size:12.5px;">${tip}</p>`;
+}
+
+/* =========================================================
+   RENDER: HOME
+========================================================= */
+function computeStats(){
+  const workoutCount = state.workoutLogs.length;
+  const walkCount = state.walkLogs.length;
+  const walkMinutes = state.walkLogs.reduce((s,w)=>s+(Number(w.duration)||0),0);
+  const workoutMinutesReal = state.workoutLogs.reduce((s,l)=> s + (l.durationMinutes!=null ? l.durationMinutes : 30), 0);
+  const totalMinutes = walkMinutes + workoutMinutesReal;
+  const totalPlanned = TOTAL_WEEKS*5; // TOTAL_WEEKS x 5 activity days (3 fuerza + 2 caminatas) por semana
+  const pct = Math.min(100, Math.round(((workoutCount+walkCount)/totalPlanned)*100));
+  // streak: consecutive days with any completion up to today
+  let streak=0; let d=new Date();
+  while(true){
+    const iso=d.toISOString().slice(0,10);
+    const has = state.workoutLogs.some(l=>l.date===iso) || state.walkLogs.some(l=>l.date===iso) || Object.keys(state.completions).some(k=>k.startsWith(iso));
+    if(has){ streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  let totalReps=0;
+  state.workoutLogs.forEach(l=>l.exercises.forEach(e=>{ totalReps += (Number(e.sets)||0)*(parseInt(e.reps)||10); }));
+  return {workoutCount, walkCount, totalMinutes, pct, streak, totalReps};
+}
+
+function renderHome(){
+  document.getElementById('topbarSub').textContent = `Semana ${state.currentWeek} de ${TOTAL_WEEKS}`;
+  document.getElementById('homeWeek').textContent = state.currentWeek;
+  const today = new Date();
+  document.getElementById('homeDayName').textContent = dayName(today);
+  const sched = scheduleForDate(today);
+  const stats = computeStats();
+  document.getElementById('homePct').textContent = stats.pct+'%';
+  document.getElementById('homeProgBar').style.width = stats.pct+'%';
+  document.getElementById('statCompleted').textContent = stats.workoutCount;
+  document.getElementById('statMinutes').textContent = stats.totalMinutes;
+  document.getElementById('statWalks').textContent = stats.walkCount;
+  document.getElementById('statStreak').textContent = stats.streak;
+
+  const msg = MOTIV_MSGS[new Date().getDate()%MOTIV_MSGS.length];
+  document.getElementById('motivBox').innerHTML = `<p>💬 ${msg}</p>`;
+
+  let todayHtml = '';
+  if(sched.type==='fuerza'){
+    const w = WORKOUTS[sched.workout];
+    todayHtml = `<h3>Próximo entrenamiento</h3><p class="muted">${sched.day}: ${w.label} · ${w.exercises.length} ejercicios · Semana ${state.currentWeek} (${WEEKS[state.currentWeek].name})</p>`;
+  } else if(sched.type==='caminata'){
+    todayHtml = `<h3>Hoy toca caminata</h3><p class="muted">${sched.day}: Caminata o actividad ligera. Un paso a paso bajo impacto ayuda a tu cuerpo y a tu glucosa.</p>`;
+  } else if(sched.type==='recuperacion'){
+    todayHtml = `<h3>Día de recuperación activa</h3><p class="muted">${sched.day}: Movilidad suave, estiramientos o una caminata corta y relajada.</p>`;
+  } else {
+    todayHtml = `<h3>Día de descanso</h3><p class="muted">${sched.day}: Descansa. La recuperación es parte del progreso.</p>`;
+  }
+  document.getElementById('todayCard').innerHTML = todayHtml;
+
+  const last = [...state.workoutLogs, ...state.walkLogs.map(w=>({...w,isWalk:true}))].sort((a,b)=>b.date.localeCompare(a.date))[0];
+  document.getElementById('lastSessionCard').innerHTML = last
+    ? `<p class="muted" style="margin:0;">Última sesión: <b style="color:var(--ink);">${last.isWalk? 'Caminata':(WORKOUTS[last.workoutId]?WORKOUTS[last.workoutId].label:'Entrenamiento')}</b> — ${formatDate(last.date)}</p>`
+    : `<p class="muted" style="margin:0;">Aún no registras ninguna sesión. ¡Comienza hoy!</p>`;
+}
+function formatDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+}
+function startTodayWorkout(){
+  const sched = scheduleForDate(new Date());
+  if(sched.type==='fuerza'){ openSessionSetup(sched.workout); }
+  else if(sched.type==='caminata' || sched.type==='recuperacion'){ go('walks'); }
+  else { toast('Hoy es día de descanso 🌿'); }
+}
+
+/* =========================================================
+   RENDER: WEEK / PROGRAM
+========================================================= */
+function renderWeekView(){
+  const tabs = document.getElementById('weekTabs');
+  const weekNums = Array.from({length:TOTAL_WEEKS}, (_,i)=>i+1);
+  tabs.innerHTML = weekNums.map(w=>`<button class="${w===state.currentWeek?'sel':''}" onclick="selectWeek(${w})">Semana ${w}</button>`).join('');
+  renderWeekContent();
+}
+function selectWeek(w){ state.currentWeek=w; saveState(); renderWeekView(); renderHome(); }
+function renderWeekContent(){
+  const w = WEEKS[state.currentWeek];
+  const phaseKeys = w.phase===1 ? ['A','B','C'] : ['D','E','F'];
+  let html = `<div class="card"><h3>Semana ${state.currentWeek} — ${w.name}</h3>
+    <span class="badge amber" style="margin-bottom:8px;display:inline-block;">${w.phase===1?'Fase 1: fundamentos':'Fase 2: variedad e intensidad'}</span>
+    <p class="muted">${w.desc}</p>
+    <div class="grid3">
+      <div class="stat"><div class="num">${w.sets}</div><div class="lbl">Series</div></div>
+      <div class="stat"><div class="num">${w.reps}</div><div class="lbl">Repeticiones</div></div>
+      <div class="stat"><div class="num" style="font-size:15px;">${w.rest}</div><div class="lbl">Descanso</div></div>
+    </div></div>`;
+  if(w.phase===2 && state.currentWeek===5){
+    html += `<div class="notebox">Esta semana cambian las sesiones de fuerza (D, E, F) para darte más variedad de ejercicios. El patrón semanal (qué días entrenas, caminas o descansas) sigue igual.</div>`;
+  }
+  phaseKeys.forEach(k=>{
+    const wo = WORKOUTS[k];
+    html += `<div class="card">
+      <div class="row"><h3>${wo.label}</h3><button class="btn btn-primary btn-sm" onclick="openSessionSetup('${k}')">Empezar</button></div>
+      <p class="muted">${wo.exercises.map(id=>EXO[id].name).join(' · ')}</p>
+    </div>`;
+  });
+  document.getElementById('weekContent').innerHTML = html;
+}
+
+/* =========================================================
+   RENDER: WORKOUT SESSION
+========================================================= */
+let activeWorkout = null; // {id, exList, logEntries:{}}
+/* =========================================================
+   SESSION SETUP (elegido cada vez que se inicia una sesión)
+========================================================= */
+function openSessionSetup(workoutId){
+  const wk = WEEKS[state.currentWeek];
+  const p = state.profile;
+  openSheet(`
+    <div class="sheethead"><h3>Antes de empezar</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <p class="muted" style="margin-top:-6px;">${WORKOUTS[workoutId].label} · Semana ${state.currentWeek}</p>
+
+    <label>Modo de entrenamiento</label>
+    <div class="seg" id="setupModeSeg">
+      <button data-v="guided" class="${p.lastSessionMode==='guided'?'sel':''}" onclick="setupPick('setupModeSeg',this,'mode')">Guiado (voz y tiempos)</button>
+      <button data-v="manual" class="${p.lastSessionMode==='manual'?'sel':''}" onclick="setupPick('setupModeSeg',this,'mode')">Manual (lista)</button>
+    </div>
+
+    <div id="guidedOptions" style="display:${p.lastSessionMode==='guided'?'block':'none'};">
+      <label>¿Cómo controlas cada serie?</label>
+      <div class="seg" id="setupSetModeSeg">
+        <button data-v="timed" class="${p.lastSetMode==='timed'?'sel':''}" onclick="setupPick('setupSetModeSeg',this,'setMode')">Por tiempo</button>
+        <button data-v="manual" class="${p.lastSetMode==='manual'?'sel':''}" onclick="setupPick('setupSetModeSeg',this,'setMode')">Yo aviso cuándo termino</button>
+      </div>
+      <div id="setupSecondsWrap" style="display:${p.lastSetMode==='timed'?'block':'none'};">
+        <label for="setupSeconds">Segundos por serie</label>
+        <input type="number" id="setupSeconds" min="10" max="180" step="5" value="${wk.setSeconds}">
+        <p class="muted" style="font-size:11.5px;margin-top:4px;">Sugerido para tu semana actual (${state.currentWeek}): ${wk.setSeconds}s. Lo puedes subir conforme ganes fuerza y resistencia.</p>
+      </div>
+      <label class="row" style="margin-top:14px;"><span style="font-weight:700;font-size:13.5px;color:var(--ink);">Voz guiada</span>
+        <input type="checkbox" id="setupVoice" ${p.voiceEnabled?'checked':''} style="width:20px;height:20px;">
+      </label>
+      <p class="muted" style="font-size:11.5px;margin-top:2px;">Anuncia el ejercicio, el descanso y la cuenta regresiva en voz alta.</p>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:16px;" onclick="beginSession('${workoutId}')">COMENZAR SESIÓN</button>
+  `);
+}
+let setupChoice = {mode:null, setMode:null};
+function setupPick(groupId, btn, field){
+  setupChoice[field] = btn.dataset.v;
+  document.getElementById(groupId).querySelectorAll('button').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  if(field==='mode'){
+    document.getElementById('guidedOptions').style.display = btn.dataset.v==='guided' ? 'block' : 'none';
+  }
+  if(field==='setMode'){
+    document.getElementById('setupSecondsWrap').style.display = btn.dataset.v==='timed' ? 'block' : 'none';
+  }
+}
+function beginSession(workoutId){
+  const p = state.profile;
+  const mode = setupChoice.mode || p.lastSessionMode || 'guided';
+  const setMode = setupChoice.setMode || p.lastSetMode || 'timed';
+  const voiceEnabled = document.getElementById('setupVoice') ? document.getElementById('setupVoice').checked : p.voiceEnabled;
+  const seconds = document.getElementById('setupSeconds') ? (Number(document.getElementById('setupSeconds').value)||WEEKS[state.currentWeek].setSeconds) : WEEKS[state.currentWeek].setSeconds;
+  // recuerda las elecciones para la próxima vez
+  p.lastSessionMode = mode; p.lastSetMode = setMode; p.voiceEnabled = voiceEnabled;
+  saveState();
+  activeWorkout = {id:workoutId, week:state.currentWeek, log:{}, config:{mode, setMode, seconds, voiceEnabled}, durationMinutes:0};
+  setupChoice = {mode:null, setMode:null};
+  closeOverlay();
+  go('workout');
+}
+function renderWorkoutSession(){
+  const wo = WORKOUTS[activeWorkout.id];
+  const wk = WEEKS[activeWorkout.week];
+  const key = todayISO()+'|fuerza|'+activeWorkout.id;
+  const doneToday = !!state.completions[key];
+  let html = `<div class="card">
+    <h2 style="margin-bottom:2px;">${wo.label}</h2>
+    <p class="muted">Semana ${activeWorkout.week} — ${wk.name} · ${wk.sets} series · ${wk.reps} reps · descanso ${wk.rest}</p>
+    <p class="muted" style="margin:2px 0 6px;">Modo manual: marca cada ejercicio tú mismo.</p>
+    <button class="btn btn-outline btn-sm" style="width:auto;margin-top:6px;" onclick="openWarmup()">INICIAR CALENTAMIENTO</button>
+  </div>`;
+  wo.exercises.forEach(id=>{
+    const ex = EXO[id];
+    const done = activeWorkout.log[id];
+    html += `<div class="check ${done?'done':''}" onclick="toggleExerciseDone('${id}')">
+      <div class="tick">${done?'✓':''}</div>
+      <div style="flex:1;">
+        <div class="name">${ex.name}</div>
+        <div class="meta">${wk.sets} series × ${wk.reps} reps · banda ${bandRecommend(id)}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="width:auto;" onclick="event.stopPropagation(); openExerciseModal('${id}')">Ver ficha</button>
+    </div>`;
+  });
+  html += `<button class="btn btn-primary" style="margin-top:16px;" onclick="finishWorkout()" ${doneToday?'disabled':''}>${doneToday?'YA COMPLETADO HOY ✓':'FINALIZAR Y REGISTRAR ENTRENAMIENTO'}</button>`;
+  document.getElementById('workoutContent').innerHTML = html;
+}
+function bandRecommend(exId){
+  const lvl = state.bandLevel[exId];
+  return lvl!=null ? BANDS[lvl] : WEEKS[state.currentWeek].band;
+}
+function toggleExerciseDone(id){
+  activeWorkout.log[id] = !activeWorkout.log[id];
+  renderWorkoutSession();
+}
+
+/* =========================================================
+   GUIDED SESSION (voz + temporizador de serie y descanso)
+========================================================= */
+function speak(text){
+  if(!activeWorkout || !activeWorkout.config || !activeWorkout.config.voiceEnabled) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES'; u.rate = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* la voz es un extra: si falla, la sesión sigue funcionando igual */ }
+}
+let guided = null; // {queue, idx, phase, remaining, paused, workInterval, totalInterval, totalElapsed, spokenCountdown}
+function initGuidedSession(){
+  const wo = WORKOUTS[activeWorkout.id];
+  const wk = WEEKS[activeWorkout.week];
+  const setsNum = wk.setsNum || (Number(wk.sets)||3);
+  const queue = [];
+  wo.exercises.forEach(exId=>{ for(let s=1;s<=setsNum;s++) queue.push({exId, setNum:s, totalSets:setsNum}); });
+  guided = {queue, idx:0, phase:'work', remaining:activeWorkout.config.seconds, elapsedSet:0, paused:false,
+    workInterval:null, totalInterval:null, totalElapsed:0, spokenCountdown:false};
+  guided.totalInterval = setInterval(()=>{
+    if(!guided.paused){ guided.totalElapsed++; activeWorkout.durationMinutes = Math.round(guided.totalElapsed/60); updateGuidedTotalLabel(); }
+  },1000);
+  speak(`Comenzando ${wo.label}. Primer ejercicio: ${EXO[queue[0].exId].name}.`);
+  renderGuidedSession();
+  startWorkPhaseTimer();
+}
+function updateGuidedTotalLabel(){
+  const el = document.getElementById('guidedTotal');
+  if(el) el.textContent = fmtTime(guided.totalElapsed);
+}
+function currentStep(){ return guided.queue[guided.idx]; }
+function startWorkPhaseTimer(){
+  clearInterval(guided.workInterval);
+  guided.spokenCountdown = false;
+  if(activeWorkout.config.setMode==='timed'){
+    guided.workInterval = setInterval(()=>{
+      if(guided.paused) return;
+      guided.remaining--;
+      guided.elapsedSet++;
+      if(guided.remaining<=3 && guided.remaining>0 && !guided.spokenCountdown){ /* no-op, se habla cada segundo abajo */ }
+      if(guided.remaining>0 && guided.remaining<=3){ speak(String(guided.remaining)); }
+      if(guided.remaining<=0){ clearInterval(guided.workInterval); goToRest(); return; }
+      renderGuidedSession();
+    },1000);
+  } else {
+    guided.workInterval = setInterval(()=>{ if(!guided.paused){ guided.elapsedSet++; renderGuidedSession(); } },1000);
+  }
+}
+function guidedMarkSetDone(){
+  clearInterval(guided.workInterval);
+  goToRest();
+}
+function goToRest(){
+  const isLast = guided.idx >= guided.queue.length-1;
+  if(isLast){ finishGuidedSession(); return; }
+  const wk = WEEKS[activeWorkout.week];
+  guided.phase = 'rest';
+  guided.remaining = wk.restSeconds;
+  speak(`Descanso, ${wk.restSeconds} segundos.`);
+  renderGuidedSession();
+  clearInterval(guided.workInterval);
+  guided.workInterval = setInterval(()=>{
+    if(guided.paused) return;
+    guided.remaining--;
+    if(guided.remaining>0 && guided.remaining<=3){ speak(String(guided.remaining)); }
+    if(guided.remaining<=0){ clearInterval(guided.workInterval); advanceToNext(); return; }
+    renderGuidedSession();
+  },1000);
+}
+function advanceToNext(){
+  const prevExId = currentStep().exId;
+  guided.idx++;
+  const next = currentStep();
+  guided.phase = 'work';
+  guided.remaining = activeWorkout.config.seconds;
+  guided.elapsedSet = 0;
+  if(next.exId !== prevExId){ speak(`Siguiente ejercicio: ${EXO[next.exId].name}.`); }
+  else { speak(`Serie ${next.setNum} de ${next.totalSets}.`); }
+  renderGuidedSession();
+  startWorkPhaseTimer();
+}
+function guidedSkip(){
+  clearInterval(guided.workInterval);
+  if(guided.phase==='work'){ goToRest(); } else { advanceToNext(); }
+}
+function guidedBack(){
+  if(guided.idx<=0 && guided.phase==='work') return;
+  clearInterval(guided.workInterval);
+  if(guided.phase==='rest'){ guided.phase='work'; }
+  else { guided.idx = Math.max(0, guided.idx-1); }
+  guided.remaining = activeWorkout.config.seconds;
+  guided.elapsedSet = 0;
+  renderGuidedSession();
+  startWorkPhaseTimer();
+}
+function guidedTogglePause(){
+  guided.paused = !guided.paused;
+  renderGuidedSession();
+}
+function leaveWorkoutView(){
+  if(activeWorkout && activeWorkout.config && activeWorkout.config.mode==='guided' && guided){ exitGuidedSession(); }
+  else { go('home'); }
+}
+function exitGuidedSession(){
+  openSheet(`
+    <div class="sheethead"><h3>¿Salir de la sesión guiada?</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <p>Perderás el progreso de esta sesión guiada (puedes volver a empezar cuando quieras).</p>
+    <div class="btnrow" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="closeOverlay()">Seguir entrenando</button>
+      <button class="btn btn-danger" onclick="confirmExitGuided()">Salir</button>
+    </div>
+  `);
+}
+function confirmExitGuided(){
+  clearInterval(guided.workInterval); clearInterval(guided.totalInterval);
+  guided = null; activeWorkout = null;
+  closeOverlay();
+  go('home');
+}
+function finishGuidedSession(){
+  clearInterval(guided.workInterval); clearInterval(guided.totalInterval);
+  speak('Entrenamiento completado. Buen trabajo.');
+  toast('¡Sesión completada! 💪');
+  finishWorkout();
+}
+function renderGuidedSession(){
+  const el = document.getElementById('workoutContent');
+  if(!el || !guided) return;
+  const wo = WORKOUTS[activeWorkout.id];
+  const step = currentStep();
+  const ex = EXO[step.exId];
+  const isRest = guided.phase==='rest';
+  const isTimed = activeWorkout.config.setMode==='timed';
+  let bigDisplay, subText;
+  if(isRest){
+    bigDisplay = fmtTime(guided.remaining);
+    subText = 'Prepárate para: ' + (guided.idx+1<guided.queue.length ? EXO[guided.queue[guided.idx+1].exId].name : '');
+  } else if(isTimed){
+    bigDisplay = fmtTime(guided.remaining);
+    subText = 'Mantén la técnica, sin prisa.';
+  } else {
+    bigDisplay = fmtTime(guided.elapsedSet);
+    subText = 'Toca "Serie lista" cuando termines tus repeticiones.';
+  }
+  let html = `
+    <div class="guided-top">
+      <button class="btn btn-outline btn-sm" style="width:auto;" onclick="exitGuidedSession()">Salir</button>
+      <span class="guided-total">⏱ <span id="guidedTotal">${fmtTime(guided.totalElapsed)}</span></span>
+    </div>
+    <p class="guided-progress">${wo.label} · Ejercicio ${wo.exercises.indexOf(step.exId)+1} de ${wo.exercises.length}</p>
+    <div class="guided-card">
+      <span class="guided-phase ${isRest?'rest':'work'}">${isRest?'Descanso':'En marcha'}</span>
+      <div class="guided-exname">${isRest ? 'Descanso' : ex.name}</div>
+      <div class="guided-setnum">Serie ${step.setNum} de ${step.totalSets}${guided.paused?' · Pausado':''}</div>
+      <div class="guided-bignum">${bigDisplay}</div>
+      <div class="guided-sub">${subText}</div>
+    </div>
+    <div class="guided-controls">
+      <button class="btn btn-outline" onclick="guidedBack()">◀ Atrás</button>
+      <button class="btn btn-outline" onclick="guidedTogglePause()">${guided.paused?'Reanudar':'Pausar'}</button>
+      <button class="btn btn-outline" onclick="guidedSkip()">Saltar ▶</button>
+    </div>
+    ${(!isRest && !isTimed) ? `<button class="btn btn-primary" onclick="guidedMarkSetDone()">SERIE LISTA ✓</button>` : ''}
+    ${!isRest ? `<div class="guided-exitrow"><button class="btn btn-outline btn-sm" style="width:auto;" onclick="event.stopPropagation(); openExerciseModal('${step.exId}')">Ver ficha del ejercicio</button></div>` : ''}
+  `;
+  el.innerHTML = html;
+}
+function finishWorkout(){
+  openSheet(logWorkoutFormHTML());
+}
+function logWorkoutFormHTML(){
+  const wo = WORKOUTS[activeWorkout.id];
+  return `<div class="sheethead"><h3>Registrar ${wo.label}</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <p class="muted">Registra brevemente cómo te fue en cada ejercicio.</p>
+    <div id="logForm">
+    ${wo.exercises.map(id=>`
+      <div class="card tight" style="margin-bottom:10px;">
+        <b style="font-size:13.5px;">${EXO[id].name}</b>
+        <label>Banda utilizada</label>
+        <select id="band_${id}">${BANDS.map((b,i)=>`<option value="${i}" ${i===(state.bandLevel[id]||1)?'selected':''}>${b}</option>`).join('')}</select>
+        <label>Esfuerzo (1-10)</label>
+        <input type="number" id="effort_${id}" min="1" max="10" value="5">
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-primary" onclick="saveWorkoutLog()">GUARDAR ENTRENAMIENTO</button>`;
+}
+function saveWorkoutLog(){
+  const wo = WORKOUTS[activeWorkout.id];
+  const wk = WEEKS[activeWorkout.week];
+  const exercises = wo.exercises.map(id=>{
+    const band = Number(document.getElementById('band_'+id).value);
+    const effort = Number(document.getElementById('effort_'+id).value)||5;
+    state.bandLevel[id]=band;
+    return {id, band, sets:wk.sets, reps:wk.reps, effort};
+  });
+  state.workoutLogs.push({date:todayISO(), week:activeWorkout.week, workoutId:activeWorkout.id, exercises, durationMinutes:activeWorkout.durationMinutes||null});
+  state.completions[todayISO()+'|fuerza|'+activeWorkout.id] = true;
+  saveState();
+  closeOverlay();
+  guided = null; activeWorkout = null;
+  toast('Entrenamiento guardado ✓');
+  go('home');
+}
+
+/* Warmup */
+let warmupTimer=null, warmupIdx=0;
+function openWarmup(){
+  warmupIdx=0;
+  openSheet(warmupStepHTML());
+}
+function warmupStepHTML(){
+  const step = WARMUP[warmupIdx];
+  const name = step.custom || EXO[step.id].name;
+  return `<div class="sheethead"><h3>Calentamiento (5–7 min)</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <p class="muted">Paso ${warmupIdx+1} de ${WARMUP.length}</p>
+    <h3>${name}</h3>
+    ${realExampleLinksHTML({name})}
+    <div class="timerbox">
+      <div class="tnum" id="warmupNum">${step.seconds}</div>
+      <div class="tlabel">segundos</div>
+      <div class="btnrow">
+        <button class="btn btn-outline btn-sm" onclick="warmupToggle()" id="warmupPlayBtn">Iniciar</button>
+        <button class="btn btn-outline btn-sm" onclick="warmupReset()">Reiniciar</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="warmupNext()">${warmupIdx<WARMUP.length-1?'SIGUIENTE':'FINALIZAR CALENTAMIENTO'}</button>`;
+}
+let warmupRunning=false, warmupRemaining=0, warmupInterval=null;
+function warmupToggle(){
+  const step = WARMUP[warmupIdx];
+  if(!warmupRunning){
+    if(warmupRemaining<=0) warmupRemaining=step.seconds;
+    warmupRunning=true;
+    document.getElementById('warmupPlayBtn').textContent='Pausar';
+    warmupInterval=setInterval(()=>{
+      warmupRemaining--;
+      const el=document.getElementById('warmupNum'); if(el) el.textContent=Math.max(0,warmupRemaining);
+      if(warmupRemaining<=0){ clearInterval(warmupInterval); warmupRunning=false; toast('¡Tiempo!'); }
+    },1000);
+  } else {
+    warmupRunning=false; clearInterval(warmupInterval);
+    document.getElementById('warmupPlayBtn').textContent='Reanudar';
+  }
+}
+function warmupReset(){
+  clearInterval(warmupInterval); warmupRunning=false; warmupRemaining=WARMUP[warmupIdx].seconds;
+  const el=document.getElementById('warmupNum'); if(el) el.textContent=warmupRemaining;
+  document.getElementById('warmupPlayBtn').textContent='Iniciar';
+}
+function warmupNext(){
+  clearInterval(warmupInterval); warmupRunning=false; warmupRemaining=0;
+  if(warmupIdx<WARMUP.length-1){ warmupIdx++; openSheet(warmupStepHTML()); }
+  else { closeOverlay(); toast('Calentamiento completado 🔥'); }
+}
+function clearActiveTimer(){ clearInterval(warmupInterval); warmupRunning=false; clearInterval(genericTimerInterval); }
+
+/* =========================================================
+   RENDER: LIBRARY
+========================================================= */
+const LIBRARY_GROUPS = [
+  {id:"todos", label:"Todos"},
+  {id:"piernas", label:"Piernas y glúteos"},
+  {id:"espalda", label:"Espalda"},
+  {id:"brazos", label:"Brazos"},
+  {id:"hombros", label:"Pecho y hombros"},
+  {id:"core", label:"Core"},
+  {id:"movilidad", label:"Movilidad / calentamiento"}
+];
+let libraryFilter = "todos";
+function setLibraryFilter(g){ libraryFilter = g; renderLibrary(); }
+function renderLibrary(){
+  const chips = `<div class="weektabs" id="libraryTabs">${LIBRARY_GROUPS.map(g=>
+    `<button class="${g.id===libraryFilter?'sel':''}" onclick="setLibraryFilter('${g.id}')">${g.label}</button>`
+  ).join('')}</div>`;
+  const ids = Object.keys(EXO).filter(id=> libraryFilter==="todos" || EXO[id].group===libraryFilter);
+  const list = ids.map(id=>{
+    const ex = EXO[id];
+    return `<div class="exitem" onclick="openExerciseModal('${id}')">
+      <div class="thumb">${miniIcon(id)}</div>
+      <div class="t"><div class="n">${ex.name}</div><div class="m">${ex.muscles}</div></div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </div>`;
+  }).join('');
+  document.getElementById('libraryList').innerHTML = chips + (list || `<p class="muted">No hay ejercicios en esta categoría.</p>`);
+}
+function miniIcon(id){
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#13284A" stroke-width="2"><circle cx="12" cy="5" r="2.4"/><path d="M12 8v6M8 11h8M9 20l3-6 3 6"/></svg>`;
+}
+function realExampleLinksHTML(ex){
+  const q = encodeURIComponent(ex.name + ' técnica correcta ejercicio');
+  const videoUrl = `https://www.youtube.com/results?search_query=${q}`;
+  const imgUrl = `https://www.google.com/search?tbm=isch&q=${q}`;
+  return `<div class="card tight" style="margin:10px 0 14px; background:var(--green-bg); border-color:#cfe3d6;">
+      <b style="font-size:12.5px;">Ejemplos reales (requiere conexión a internet)</b>
+      <div class="btnrow" style="margin-top:8px;">
+        <a class="btn btn-primary btn-sm" style="width:auto;flex:1;text-decoration:none;text-align:center;" href="${videoUrl}" target="_blank" rel="noopener">▶ Ver video</a>
+        <a class="btn btn-outline btn-sm" style="width:auto;flex:1;text-decoration:none;text-align:center;" href="${imgUrl}" target="_blank" rel="noopener">🖼 Ver fotos</a>
+      </div>
+      <p class="muted" style="font-size:11px;margin:8px 0 0;">Abre una búsqueda real en YouTube / Google Imágenes para este ejercicio. El dibujo de abajo es solo un esquema rápido sin conexión (banda y postura general).</p>
+    </div>`;
+}
+function openExerciseModal(id){
+  const ex = EXO[id];
+  openSheet(`
+    <div class="sheethead"><div><h3>${ex.name}</h3><span class="badge amber">PRINCIPIANTE</span></div><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    ${realExampleLinksHTML(ex)}
+    <p class="sectiontitle">Esquema rápido (sin conexión)</p>
+    ${illustrationHTML(id)}
+    <p class="sectiontitle">Músculos trabajados</p><p>${ex.muscles}</p>
+    <p class="sectiontitle">Equipo necesario</p><p>${ex.equip}</p>
+    <p class="sectiontitle">Posición inicial</p><p>${ex.start}</p>
+    <p class="sectiontitle">Ejecución paso a paso</p><ul class="infolist">${ex.steps.map(s=>`<li>${s}</li>`).join('')}</ul>
+    <p class="sectiontitle">Respiración</p><p>${ex.breathing}</p>
+    <p class="sectiontitle">Series / repeticiones / descanso (semana ${state.currentWeek})</p>
+    <p>${WEEKS[state.currentWeek].sets} series × ${WEEKS[state.currentWeek].reps} repeticiones · descanso ${WEEKS[state.currentWeek].rest}</p>
+    <p class="sectiontitle">Resistencia recomendada</p><p>${bandRecommend(id)}</p>
+    <p class="sectiontitle">Errores comunes</p><p>${ex.errors}</p>
+    <p class="sectiontitle">Cómo saber que lo haces correctamente</p><p>${ex.correct}</p>
+    <p class="sectiontitle">Cuándo aumentar la resistencia</p><p>${ex.increase}</p>
+    <div class="grid2">
+      <div class="card tight"><b style="font-size:12.5px;">Versión más fácil</b><p class="muted" style="margin-top:4px;">${ex.easier}</p></div>
+      <div class="card tight"><b style="font-size:12.5px;">Versión progresiva</b><p class="muted" style="margin-top:4px;">${ex.harder}</p></div>
+    </div>
+  `);
+}
+
+/* =========================================================
+   RENDER: CALENDAR
+========================================================= */
+function renderCalendar(){
+  const today = new Date();
+  const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay()+6)%7));
+  const weekSchedule = getScheduleForWeek(state.currentWeek);
+  let grid = '<div class="calgrid">';
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    days.push(d);
+    const sched = weekSchedule[i];
+    const iso = d.toISOString().slice(0,10);
+    const key = sched.type==='fuerza' ? `${iso}|fuerza|${sched.workout}` : `${iso}|${sched.type}`;
+    const done = sched.type==='fuerza' ? !!state.completions[key] : (sched.type==='caminata' ? state.walkLogs.some(w=>w.date===iso) : !!state.completions[key]);
+    const isToday = iso===todayISO();
+    grid += `<div class="calday ${isToday?'today':''} ${done?'done':''}" onclick="calDayClick('${sched.type}','${sched.workout||''}','${iso}')">
+      <div class="d">${sched.day.slice(0,3)}</div>
+      <div class="icon">${calIcon(sched.type,done)}</div>
+      <div style="font-size:9.5px;color:var(--ink-soft);">${done?'✓':'○'}</div>
+    </div>`;
+  }
+  grid += '</div>';
+  let legend = `<div class="card tight"><p class="muted" style="margin:0;">✓ Completado &nbsp;&nbsp; ○ Pendiente &nbsp;&nbsp; Semana ${state.currentWeek} (${WEEKS[state.currentWeek].phase===1?'Fase 1':'Fase 2'})</p></div>`;
+  let list = '<p class="sectiontitle">Detalle de la semana</p>';
+  weekSchedule.forEach((s,i)=>{
+    let desc='';
+    if(s.type==='fuerza') desc = WORKOUTS[s.workout].label+' — '+WORKOUTS[s.workout].exercises.length+' ejercicios';
+    else if(s.type==='caminata') desc = 'Caminata / actividad ligera';
+    else if(s.type==='recuperacion') desc = 'Recuperación activa';
+    else desc = 'Descanso';
+    list += `<div class="card tight" style="margin-bottom:8px;"><div class="row"><b style="font-size:13.5px;">${s.day}</b><span class="muted">${desc}</span></div></div>`;
+  });
+  document.getElementById('calendarContent').innerHTML = grid + legend + list;
+}
+function calIcon(type,done){
+  const color = done ? '#3C8C6C' : '#8CA0BE';
+  if(type==='fuerza') return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M4 9v6"/><path d="M2 8v8"/><path d="M20 9v6"/><path d="M22 8v8"/><path d="M6.5 12h11"/></svg>`;
+  if(type==='caminata') return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><circle cx="13" cy="4" r="2"/><path d="M9 21l2-6 -2-3 1-5 4 1 2 4 3 2"/></svg>`;
+  if(type==='recuperacion') return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M12 3v9l6 3"/><circle cx="12" cy="12" r="9"/></svg>`;
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M4 12h16"/></svg>`;
+}
+function calDayClick(type,workout,iso){
+  if(type==='fuerza'){
+    if(iso===todayISO()){ openSessionSetup(workout); }
+    else toast('Puedes entrenar cualquier día del programa desde la pestaña Semana.');
+  } else if(type==='caminata'){ go('walks'); }
+  else if(type==='recuperacion'){ toast('Día de recuperación: movilidad suave o una caminata corta.'); }
+  else { toast('Día de descanso 🌿'); }
+}
+
+/* =========================================================
+   RENDER: WALKS
+========================================================= */
+function renderWalks(){
+  const wp = {
+    1:"Caminatas cortas y cómodas (10–15 min), a ritmo tranquilo.",
+    2:"Aumenta ligeramente la duración (15–20 min) si te sientes bien.",
+    3:"Aumenta progresivamente (20–25 min) o el ritmo, manteniendo comodidad.",
+    4:"Consolida tu rutina de caminatas (20–30 min) como hábito regular.",
+    5:"Aumenta un poco más el ritmo o la duración (25–30 min) si te sientes cómodo.",
+    6:"Puedes variar el terreno (cuestas suaves) o el ritmo para seguir progresando.",
+    7:"Caminatas de 25–35 min, con tramos a paso más vivo si te sientes bien.",
+    8:"Consolida tu rutina de caminatas como un hábito estable a largo plazo."
+  };
+  document.getElementById('walkProgressionCard').innerHTML = `<p style="margin:0;"><b>Semana ${state.currentWeek}:</b> ${wp[state.currentWeek]}</p>`;
+  const hist = [...state.walkLogs].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('walkHistory').innerHTML = hist.length ? hist.map(w=>`
+    <div class="card tight" style="margin-bottom:8px;">
+      <div class="row"><b style="font-size:13.5px;">${formatDate(w.date)}</b><span class="badge green">${w.duration} min</span></div>
+      <p class="muted" style="margin:6px 0 0;">${w.distance?('Distancia: '+w.distance+' '+state.profile.unit+' · '):''}Esfuerzo ${w.effort}/10${w.notes?(' · '+w.notes):''}</p>
+    </div>`).join('') : `<p class="muted">Aún no has registrado caminatas.</p>`;
+}
+function openWalkForm(){
+  openSheet(`
+    <div class="sheethead"><h3>Registrar caminata</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <label>Fecha</label><input type="date" id="walkDate" value="${todayISO()}">
+    <label>Duración (minutos)</label><input type="number" id="walkDuration" min="1" value="15">
+    <label>Distancia (${state.profile.unit}) — opcional</label><input type="number" id="walkDistance" step="0.1">
+    <label>Sensación de esfuerzo (1-10)</label><input type="number" id="walkEffort" min="1" max="10" value="4">
+    <label>Comentarios</label><textarea id="walkNotes" placeholder="Opcional"></textarea>
+    <button class="btn btn-outline" style="margin-top:14px;" onclick="openTimerTool('caminata')">USAR TEMPORIZADOR DE CAMINATA</button>
+    <button class="btn btn-primary" style="margin-top:10px;" onclick="saveWalk()">GUARDAR CAMINATA</button>
+  `);
+}
+function saveWalk(){
+  const date = document.getElementById('walkDate').value || todayISO();
+  const duration = Number(document.getElementById('walkDuration').value)||0;
+  const distance = document.getElementById('walkDistance').value;
+  const effort = Number(document.getElementById('walkEffort').value)||4;
+  const notes = document.getElementById('walkNotes').value;
+  state.walkLogs.push({date, duration, distance: distance||null, effort, notes});
+  saveState();
+  closeOverlay();
+  toast('Caminata registrada ✓');
+  go('walks');
+}
+
+/* =========================================================
+   RENDER: PROGRESS
+========================================================= */
+function renderProgress(){
+  const stats = computeStats();
+  document.getElementById('pgCompleted').textContent = stats.workoutCount;
+  document.getElementById('pgPct').textContent = stats.pct+'%';
+  document.getElementById('pgStreak').textContent = stats.streak;
+  document.getElementById('pgWalkMin').textContent = state.walkLogs.reduce((s,w)=>s+(Number(w.duration)||0),0);
+  document.getElementById('pgReps').textContent = stats.totalReps;
+  const bandCounts = {};
+  state.workoutLogs.forEach(l=>l.exercises.forEach(e=>{ bandCounts[e.band]=(bandCounts[e.band]||0)+1; }));
+  const topBand = Object.keys(bandCounts).sort((a,b)=>bandCounts[b]-bandCounts[a])[0];
+  document.getElementById('pgBands').textContent = topBand!=null ? BANDS[topBand] : '—';
+
+  let chart = '<div style="display:flex;align-items:flex-end;gap:6px;height:110px;overflow-x:auto;">';
+  Array.from({length:TOTAL_WEEKS}, (_,i)=>i+1).forEach(w=>{
+    const count = state.workoutLogs.filter(l=>l.week===w).length;
+    const pct = Math.min(100, Math.round((count/3)*100));
+    chart += `<div style="flex:1;min-width:28px;text-align:center;">
+      <div style="height:80px;display:flex;align-items:flex-end;">
+        <div style="width:100%;background:linear-gradient(180deg,var(--amber),var(--amber-dark));border-radius:6px 6px 0 0;height:${Math.max(6,pct*0.8)}px;"></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:6px;">S${w}</div>
+    </div>`;
+  });
+  chart += '</div>';
+  document.getElementById('progressChart').innerHTML = chart;
+
+  let bandHtml = '';
+  Object.keys(EXO).forEach(id=>{
+    const lvl = state.bandLevel[id];
+    if(lvl==null) return;
+    bandHtml += `<div class="row" style="margin-bottom:8px;"><span class="muted" style="font-size:13px;">${EXO[id].name}</span><span class="badge amber">${BANDS[lvl]}</span></div>`;
+  });
+  document.getElementById('bandEvolution').innerHTML = bandHtml || `<p class="muted" style="margin:0;">Registra entrenamientos para ver la evolución de tus bandas.</p>`;
+}
+
+/* =========================================================
+   INCREASE RESISTANCE QUIZ
+========================================================= */
+function openIncreaseQuiz(){
+  openSheet(`
+    <div class="sheethead"><h3>¿Debo aumentar la resistencia?</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <div id="quizForm">
+      ${quizQ('q1','¿Completaste todas las repeticiones?')}
+      ${quizQ('q2','¿La técnica fue correcta durante todo el ejercicio?')}
+      ${quizQ('q3','¿Sentiste que podrías haber hecho varias repeticiones adicionales?')}
+      ${quizQ('q4','¿Tuviste dolor durante el ejercicio?', true)}
+    </div>
+    <button class="btn btn-primary" style="margin-top:6px;" onclick="evalQuiz()">VER RESULTADO</button>
+    <div id="quizResult" style="margin-top:14px;"></div>
+  `);
+}
+function quizQ(id,text,isPainQuestion){
+  return `<div class="card tight" style="margin-bottom:8px;"><p style="margin:0 0 8px;font-size:13.5px;font-weight:600;">${text}</p>
+    <div class="seg" data-q="${id}">
+      <button onclick="selQ('${id}',this,true)">Sí</button>
+      <button onclick="selQ('${id}',this,false)">No</button>
+    </div></div>`;
+}
+const quizAnswers = {};
+function selQ(id,btn,val){
+  quizAnswers[id]=val;
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function evalQuiz(){
+  if(quizAnswers.q4===true){
+    showQuizResult('Reduce la resistencia y prioriza la técnica', 'brick', 'El dolor no es una señal a ignorar. Baja la resistencia, revisa tu técnica y, si el dolor persiste, consulta a un profesional de salud.');
+    return;
+  }
+  if(quizAnswers.q1===true && quizAnswers.q2===true && quizAnswers.q3===true){
+    showQuizResult('Puedes probar una resistencia ligeramente mayor', 'green', 'Completaste el ejercicio con buena técnica y esfuerzo moderado de sobra. La próxima vez puedes probar un nivel de banda más arriba.');
+  } else if(quizAnswers.q1===false || quizAnswers.q2===false){
+    showQuizResult('Reduce la resistencia y prioriza la técnica', 'brick', 'Cuando no se completan las repeticiones o la técnica se pierde, es momento de bajar la resistencia y enfocarte en el movimiento correcto.');
+  } else {
+    showQuizResult('Mantén la resistencia', 'amber', 'Vas por buen camino. Sigue con la misma resistencia un poco más antes de aumentarla.');
+  }
+}
+function showQuizResult(title,cls,desc){
+  document.getElementById('quizResult').innerHTML = `<div class="card"><span class="badge ${cls}">${title}</span><p class="muted" style="margin-top:8px;">${desc}</p></div>`;
+}
+
+/* =========================================================
+   GENERIC TIMER TOOL
+========================================================= */
+let genericTimerInterval=null, genericTimerRemaining=0, genericTimerRunning=false;
+function openTimerTool(mode){
+  const defaults = {descanso: state.profile.restDuration, caminata:600, ejercicio:30};
+  genericTimerRemaining = defaults[mode]||60;
+  openSheet(`
+    <div class="sheethead"><h3>Temporizador</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <div class="timerbox">
+      <div class="tnum" id="genTimerNum">${fmtTime(genericTimerRemaining)}</div>
+      <div class="tlabel">minutos:segundos</div>
+      <div class="btnrow">
+        <button class="btn btn-outline btn-sm" id="genTimerPlay" onclick="genTimerToggle()">Iniciar</button>
+        <button class="btn btn-outline btn-sm" onclick="genTimerReset(${defaults[mode]||60})">Reiniciar</button>
+      </div>
+    </div>
+  `);
+}
+function fmtTime(s){ s=Math.max(0,s); const m=Math.floor(s/60); const sec=s%60; return `${m}:${sec<10?'0':''}${sec}`; }
+function genTimerToggle(){
+  if(!genericTimerRunning){
+    genericTimerRunning=true; document.getElementById('genTimerPlay').textContent='Pausar';
+    genericTimerInterval=setInterval(()=>{
+      genericTimerRemaining--;
+      const el=document.getElementById('genTimerNum'); if(el) el.textContent=fmtTime(genericTimerRemaining);
+      if(genericTimerRemaining<=0){ clearInterval(genericTimerInterval); genericTimerRunning=false; toast('¡Tiempo cumplido!'); }
+    },1000);
+  } else {
+    genericTimerRunning=false; clearInterval(genericTimerInterval);
+    document.getElementById('genTimerPlay').textContent='Reanudar';
+  }
+}
+function genTimerReset(v){
+  clearInterval(genericTimerInterval); genericTimerRunning=false; genericTimerRemaining=v;
+  const el=document.getElementById('genTimerNum'); if(el) el.textContent=fmtTime(v);
+  const btn=document.getElementById('genTimerPlay'); if(btn) btn.textContent='Iniciar';
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+function renderSettings(){
+  document.getElementById('cfgName').value = state.profile.name;
+  document.getElementById('cfgRest').value = state.profile.restDuration;
+  document.getElementById('cfgGoal').value = state.profile.goal;
+  document.getElementById('cfgReminders').checked = state.profile.reminders;
+  document.getElementById('cfgDark').checked = state.profile.dark;
+  document.querySelectorAll('#cfgWeekSeg button').forEach(b=>b.classList.toggle('sel', Number(b.dataset.w)===state.currentWeek));
+  document.querySelectorAll('#cfgUnitSeg button').forEach(b=>b.classList.toggle('sel', b.dataset.u===state.profile.unit));
+  const emailEl = document.getElementById('cfgAccountEmail');
+  const fbUser = firebase.auth().currentUser;
+  if(emailEl) emailEl.textContent = fbUser ? fbUser.email : '—';
+}
+document.getElementById('cfgWeekSeg')?.addEventListener('click',e=>{ if(e.target.dataset.w){ document.querySelectorAll('#cfgWeekSeg button').forEach(b=>b.classList.remove('sel')); e.target.classList.add('sel'); }});
+function saveSettings(){
+  state.profile.name = document.getElementById('cfgName').value;
+  const wsel = document.querySelector('#cfgWeekSeg button.sel');
+  state.currentWeek = wsel? Number(wsel.dataset.w) : state.currentWeek;
+  const usel = document.querySelector('#cfgUnitSeg button.sel');
+  state.profile.unit = usel? usel.dataset.u : state.profile.unit;
+  state.profile.restDuration = Number(document.getElementById('cfgRest').value)||75;
+  state.profile.goal = document.getElementById('cfgGoal').value;
+  state.profile.reminders = document.getElementById('cfgReminders').checked;
+  state.profile.dark = document.getElementById('cfgDark').checked;
+  applyTheme();
+  saveState();
+  toast('Configuración guardada ✓');
+  renderHome();
+}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.profile.dark ? 'dark':'light');
+}
+
+/* =========================================================
+   EXPORT / IMPORT / RESET
+========================================================= */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'mi_entrenamiento_bandas_progreso.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Progreso exportado ✓');
+}
+function importData(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      state = Object.assign(defaultState(), data, {profile:Object.assign(defaultState().profile, data.profile||{})});
+      saveState(); applyTheme();
+      toast('Progreso importado ✓');
+      go('home');
+    }catch(err){ toast('El archivo no es válido'); }
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+function confirmReset(){
+  openSheet(`
+    <div class="sheethead"><h3>Borrar todos los datos</h3><button class="closebtn" onclick="closeOverlay()">✕</button></div>
+    <p>Esta acción eliminará todo tu progreso guardado en tu cuenta de forma permanente. ¿Deseas continuar?</p>
+    <div class="btnrow" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="closeOverlay()">Cancelar</button>
+      <button class="btn btn-danger" onclick="doReset()">Sí, borrar todo</button>
+    </div>
+  `);
+}
+function doReset(){
+  state = defaultState(); saveState(); applyTheme();
+  closeOverlay(); toast('Datos borrados'); go('home');
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+function init(){
+  buildNav();
+  applyTheme();
+  go('home');
+}
+// patch workout view render hook
+const _origRenderView = renderView;
+renderView = function(view){
+  _origRenderView(view);
+  if(view==='workout' && activeWorkout){
+    if(activeWorkout.config && activeWorkout.config.mode==='guided'){
+      if(!guided) initGuidedSession(); else renderGuidedSession();
+    } else {
+      renderWorkoutSession();
+    }
+  }
+};
+bootstrapAuth();
+</script>
+</body>
+</html>
