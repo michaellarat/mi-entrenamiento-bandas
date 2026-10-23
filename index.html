@@ -26,7 +26,20 @@ label{display:block;margin:6px 0}.g{display:grid;grid-template-columns:repeat(au
 .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.metric{padding:10px;border:1px solid var(--ln);border-radius:10px}.smallbtn{font-size:.9rem}.print-only{display:none}svg{max-width:100%;height:auto}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 @media print{nav,header,button,#toast,.no-print{display:none!important}.print-only{display:block!important}body{background:#fff;color:#000;font-size:11pt}.c{border:1px solid #999;break-inside:avoid;background:#fff;color:#000}.mut{color:#444}.bar{border:1px solid #999}.bar i{background:#777!important}}
+#authGate{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}#authGate .c{width:100%;max-width:380px;margin:0}#authGate input{width:100%}#authErr{display:none;padding:8px 10px;margin:8px 0;background:var(--bg);border-radius:8px}#authForgot{display:inline-block;margin-top:10px;color:var(--pri)}@media print{#authGate{display:none!important}}
 </style></head><body>
+<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="c">
+<h2 id="authTitle">Mi entrenamiento · 24 semanas</h2>
+<p class="mut" id="authMsg">Verificando acceso…</p>
+<div id="authErr" class="warn" role="alert"></div>
+<form id="authForm" novalidate style="display:none">
+<label for="authEmail">Correo electrónico</label><input id="authEmail" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" inputmode="email">
+<label for="authPass">Contraseña</label><input id="authPass" type="password" autocomplete="current-password">
+<button class="b" id="authBtn" type="submit" style="width:100%;margin-top:10px">Iniciar sesión</button>
+<a href="#" id="authForgot">¿Olvidaste tu contraseña?</a>
+</form>
+<button class="b" id="authRetry" type="button" style="display:none">Reintentar</button>
+</div></div>
 <header><h1>Mi entrenamiento · 24 semanas</h1></header>
 <nav id="nav"><span style="padding:8px;color:var(--mut)">Cargando menú…</span></nav><main id="app">
 <div class="c"><h2>Mi entrenamiento · 24 semanas</h2><p>La aplicación necesita abrirse en un navegador con JavaScript habilitado para mostrar el calendario, registrar ejercicios y guardar datos.</p><p><b>Si estás viendo esta pantalla dentro de la vista previa de Archivos del iPhone:</b> toca Compartir y elige Safari o abre el archivo desde Safari. La vista previa puede mostrar sólo el contenido HTML estático y no ejecutar la aplicación.</p><p>Cuando JavaScript esté activo aparecerán aquí el plan semanal, la sesión de hoy, los ejercicios, los registros de corredora y glucosa, los reportes y los respaldos.</p></div>
@@ -314,4 +327,66 @@ catch (err) {
   const n=document.querySelector("#nav"); if(n)n.innerHTML='';
   console.error("Error al iniciar Mi entrenamiento",err);
 }
-</script></body></html>
+</script><script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-database-compat.js"></script>
+<script>
+/* Acceso con la misma cuenta de Firebase Authentication (correo y contraseña). No lee ni escribe la base de datos de Firebase. */
+(function(){
+var firebaseConfig = {
+  apiKey: "AIzaSyCEpS9NDxVerSTYGbw3NDRfLUoYAv5MbYM",
+  authDomain: "mi-entrenamiento-bandas.firebaseapp.com",
+  databaseURL: "https://mi-entrenamiento-bandas-default-rtdb.firebaseio.com",
+  projectId: "mi-entrenamiento-bandas",
+  storageBucket: "mi-entrenamiento-bandas.firebasestorage.app",
+  messagingSenderId: "185558767744",
+  appId: "1:185558767744:web:f736a494eab28aca0f6e65"
+};
+var $=function(i){return document.getElementById(i)},gate=$("authGate"),email="";
+function lock(on){var l=document.querySelectorAll("header,nav,main");for(var i=0;i<l.length;i++){if(on){l[i].setAttribute("inert","");l[i].setAttribute("aria-hidden","true")}else{l[i].removeAttribute("inert");l[i].removeAttribute("aria-hidden")}}}
+function show(st){$("authMsg").textContent=st==="form"?"Inicia sesión para continuar.":(st==="offline"?"":"Verificando acceso…");$("authForm").style.display=st==="form"?"block":"none";$("authRetry").style.display=st==="offline"?"inline-block":"none"}
+function err(m){var e=$("authErr");e.textContent=m||"";e.style.display=m?"block":"none"}
+function tr(er){var m={"auth/invalid-email":"Ese correo no es válido.","auth/user-not-found":"Correo o contraseña incorrectos.","auth/wrong-password":"Correo o contraseña incorrectos.","auth/invalid-credential":"Correo o contraseña incorrectos.","auth/user-disabled":"Esta cuenta está deshabilitada.","auth/too-many-requests":"Demasiados intentos. Espera unos minutos o restablece tu contraseña.","auth/network-request-failed":"Sin conexión a internet. Revisa tu red e intenta de nuevo."};return m[er&&er.code]||("No se pudo completar la operación"+(er&&er.message?": "+er.message:"."))}
+function esc2(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+lock(true);
+$("authRetry").onclick=function(){location.reload()};
+if(typeof firebase==="undefined"||!firebase.auth){show("offline");err("No se pudo cargar el servicio de acceso. Se necesita conexión a internet para iniciar sesión.");return}
+try{firebase.initializeApp(firebaseConfig)}catch(e){show("offline");err("No se pudo iniciar el servicio de acceso: "+(e&&e.message?e.message:"error desconocido"));return}
+var auth=firebase.auth();
+$("authForm").onsubmit=function(ev){ev.preventDefault();var e=$("authEmail").value.trim(),p=$("authPass").value;if(!e||!p){err("Completa tu correo y tu contraseña.");return}err("");var b=$("authBtn");b.disabled=true;auth.signInWithEmailAndPassword(e,p).then(function(){b.disabled=false},function(er){b.disabled=false;err(tr(er))})};
+$("authForgot").onclick=function(ev){ev.preventDefault();var e=$("authEmail").value.trim();if(!e){err("Escribe tu correo arriba y vuelve a tocar este enlace.");return}err("");auth.sendPasswordResetEmail(e).then(function(){$("authMsg").textContent="Si el correo está registrado, recibirás un mensaje para restablecer tu contraseña."},function(er){err(tr(er))})};
+/* ---- Guardado en la nube (Realtime Database, ruta plan24/<tu uid>) ---- */
+var CK=KEY+"_cloud",BK=KEY+"_backup_antes_nube",dbx=null,ref=null,uid=null,ready=false,busy=false,pt=null,cmsg="",lastErr=0;
+function hs(t){var x=5381,i=t.length;while(i)x=(x*33)^t.charCodeAt(--i);return String(x>>>0)}
+function meta(){try{return JSON.parse(localStorage.getItem(CK))||{}}catch(e){return{}}}
+function setMeta(m){try{localStorage.setItem(CK,JSON.stringify(m))}catch(e){}}
+function cur(){try{return localStorage.getItem(KEY)||""}catch(e){return""}}
+function hasData(j){try{var d=JSON.parse(j);return !!(d&&((d.logs&&d.logs.length)||(d.run&&d.run.length)||(d.glu&&d.glu.length)||d.act))}catch(e){return false}}
+function hhmm(){var d=new Date();return("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+function setSt(t){cmsg=t;var e=$("cloudSt");if(e)e.textContent=t}
+function failMsg(er){return "Nube: error"+(er&&er.code?" ("+er.code+")":"")+". Revisa las reglas de la base de datos."}
+function pull(r){try{JSON.parse(r.json);var old=cur();if(old&&hasData(old))localStorage.setItem(BK,old);localStorage.setItem(KEY,r.json);setMeta({u:uid,t:r.t,h:hs(r.json)});load();render();ready=true;setSt("Nube: datos cargados a las "+hhmm())}catch(e){setSt("Nube: no se pudieron cargar los datos de la nube")}}
+function push(){if(!ready||!ref)return;var js=cur();if(!js)return;var m=meta(),mine=m.u===uid;if(mine&&m.h===hs(js)){return}var known=mine?m.t:null,t=Date.now();
+ref.transaction(function(c){if(c&&c.t!==known)return;return{t:t,json:js}}).then(function(r){if(r&&r.committed){setMeta({u:uid,t:t,h:hs(js)});setSt("Nube: sincronizado a las "+hhmm())}else{sync()}},function(er){setSt(failMsg(er));if(Date.now()-lastErr>60000){lastErr=Date.now();try{toast("No se pudo guardar en la nube. Tus datos siguen en este teléfono.")}catch(e){}}})}
+function decide(r){var js=cur(),m=meta(),mine=m.u===uid;
+if(!r||typeof r.json!=="string"){ready=true;if(js)push();else setSt("Nube: conectada");return}
+if(mine&&m.t===r.t){ready=true;if(m.h===hs(js))setSt("Nube: sincronizado");else push();return}
+var clean=mine&&m.h===hs(js);
+if(clean||(!mine&&!hasData(js))){pull(r);return}
+if(window.confirm("Hay datos distintos en este teléfono y en la nube.\n\nAceptar = usar los de la nube (se guarda una copia de respaldo de los de este teléfono).\nCancelar = reemplazar los de la nube con los de este teléfono.")){pull(r)}else{setMeta({u:uid,t:r.t,h:""});ready=true;push()}}
+function sync(){if(busy||!ref)return;busy=true;setSt("Nube: sincronizando…");var done=false,tm=setTimeout(function(){if(done)return;done=true;busy=false;setSt("Nube: sin conexión; se sincronizará al reconectar")},10000);
+ref.once("value").then(function(sn){if(done)return;done=true;clearTimeout(tm);busy=false;decide(sn.val())},function(er){if(done)return;done=true;clearTimeout(tm);busy=false;setSt(failMsg(er))})}
+function startSync(u){uid=u.uid;ready=false;busy=false;if(typeof firebase.database!=="function"){setSt("Nube: no disponible; los datos quedan solo en este teléfono");return}
+try{dbx=firebase.database();ref=dbx.ref("plan24/"+uid);setSt("Nube: conectando…");dbx.ref(".info/connected").on("value",function(s){if(s.val()===true&&uid){if(!ready)sync();else push()}});sync()}catch(e){setSt("Nube: no disponible; los datos quedan solo en este teléfono")}}
+function stopSync(){try{if(dbx)dbx.ref(".info/connected").off()}catch(e){}clearTimeout(pt);uid=null;ref=null;ready=false;busy=false;setSt("")}
+var osave=window.save;
+if(typeof osave==="function")window.save=function(){osave();if(uid){setSt("Nube: pendiente de subir");clearTimeout(pt);pt=setTimeout(push,1500)}};
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&uid&&ready)sync()});
+window.authSync=function(){if(!uid){setSt("Nube: inicia sesión primero");return}if(ready)push();sync()};
+auth.onAuthStateChanged(function(u){if(u){email=u.email||"";gate.style.display="none";lock(false);startSync(u)}else{stopSync();email="";gate.style.display="flex";lock(true);$("authPass").value="";show("form")}});
+window.authLogout=function(){auth.signOut()};
+var prev=window.vCfg;
+if(typeof prev==="function")window.vCfg=function(){return prev()+'<div class="c"><h2>Cuenta</h2><p class="mut">Sesión iniciada como '+esc2(email)+'</p><p class="mut" id="cloudSt">'+esc2(cmsg)+'</p><button class="b s" onclick="authSync()">Sincronizar ahora</button><button class="b s" onclick="authLogout()">Cerrar sesión</button></div>'};
+})();
+</script>
+</body></html>
